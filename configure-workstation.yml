@@ -36,9 +36,8 @@
         
     - name: Configure aliases
       blockinfile:
-        dest: /home/{{ local_user }}/.bashrc
-        block: "{{ lookup('file', 'files/bashrc_aliases') }}"
         path: /home/{{ local_user }}/.bashrc
+        block: "{{ lookup('file', 'files/bashrc_aliases') }}"
         owner: "{{ local_user }}"
         group: "{{ local_user }}"
         mode: 0644
@@ -51,6 +50,14 @@
         owner: "{{ local_user }}"
         group: "{{ local_user }}"
         mode: 0600
+
+    - name: Copy my-gsettings.sh
+      copy:
+        src: files/my-gsettings.sh
+        dest: /home/{{ local_user }}/bin/
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0775
 
     - name: Run gsettings
       become: true
