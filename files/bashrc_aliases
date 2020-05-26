@@ -1,5 +1,38 @@
-alias spellr="aspell list | sort | uniq -c | sort -rn"
+alias spellr="aspell --mode=asciidoc list | sort | uniq -c | sort -rn"
+alias spellrxml="aspell list | sort | uniq -c | sort -rn"
 alias font-default="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 11'"
 alias font-16="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 16'"
 alias font-18="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 18'"
 
+function spellr_dir {
+  if [ -f /tmp/check-spelling-raw.txt ]
+  then
+    rm -f /tmp/check-spelling-raw.txt
+  fi
+
+  for FILE in $(ls)
+  do
+    echo ${FILE} | sed 's/\(.*\)\.[a-z]\+/\1/' >> /tmp/check-spelling-raw.txt
+  done
+  cat /tmp/check-spelling-raw.txt | sort | uniq > /tmp/check-spelling.txt
+
+  for FILE in $(cat /tmp/check-spelling.txt)
+  do 
+    if [ -f ${FILE}.adoc ]
+    then
+      if [ $(cat ${FILE}.adoc | spellr | wc -l) -gt 0 ]
+      then
+        echo ${FILE}.adoc
+        cat ${FILE}.adoc | spellr
+      fi
+    fi
+    if [ -f ${FILE}.xml ]
+    then
+      if [ $(cat ${FILE}.xml | spellrxml | wc -l) -gt 0 ]
+      then
+        echo ${FILE}.xml
+        cat ${FILE}.xml | spellrxml
+      fi
+    fi
+  done
+}

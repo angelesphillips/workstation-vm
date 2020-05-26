@@ -37,6 +37,7 @@
     - name: Configure aliases
       blockinfile:
         path: /home/{{ local_user }}/.bashrc
+        marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
         block: "{{ lookup('file', 'files/bashrc_aliases') }}"
         owner: "{{ local_user }}"
         group: "{{ local_user }}"
@@ -64,3 +65,22 @@
       become_user: "{{ local_user }}"
       command: /home/{{ local_user }}/bin/my-gsettings.sh
       changed_when: false
+
+    - name: Install local RPMs for aspell and ascii-doc
+      dnf:
+        name:
+          - files/a2g-0.1.7-1.el8.noarch.rpm
+          - files/aspell-asciidoc-0.1-2.el8.x86_64.rpm
+          - files/rubygem-asciidoctor-1.5.6.1-6.fc30.noarch.rpm
+        state: installed
+
+    - name: Apply additional ~/.aspell.conf configuration
+      blockinfile:
+        path: /home/{{ local_user }}/.aspell.conf
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        block: |
+          #add-asciidoc-blocks ====
+          add-asciidoc-tags *
+          add-asciidoc-macros
+          
