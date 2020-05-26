@@ -1,0 +1,59 @@
+---
+- name: Configure workstation VM
+  hosts: localhost
+  tasks:
+    - name: Install software
+      dnf:
+        name:
+          - gnome-tweaks
+        state: latest
+
+    - name: Customize .vimrc
+      copy:
+        content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
+        dest: /home/{{ local_user }}/.vimrc
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0664
+
+    - name: Make Regular Directories
+      file:
+        path: "{{ item }}"
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0775
+      loop:
+        - /home/{{ local_user }}/bin
+        
+    - name: Make Secure Directories
+      file:
+        path: "{{ item }}"
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0700
+      loop:
+        - /home/{{ local_user }}/.config
+        
+    - name: Configure aliases
+      blockinfile:
+        dest: /home/{{ local_user }}/.bashrc
+        block: "{{ lookup('file', 'files/bashrc_aliases') }}"
+        path: /home/{{ local_user }}/.bashrc
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0644
+        state: present
+
+    - name: Set display resolution to 1280 x 1024
+      copy:
+        src: files/monitors.xml
+        dest: /home/{{ local_user }}/.config/
+        owner: "{{ local_user }}"
+        group: "{{ local_user }}"
+        mode: 0600
+
+    - name: Run gsettings
+      become: true
+      become_user: "{{ local_user }}"
+      command: /home/{{ local_user }}/bin/my-gsettings.sh
+      changed_when: false
