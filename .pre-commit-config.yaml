@@ -1,0 +1,46 @@
+---
+exclude: '^$'
+fail_fast: true
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.5.0
+    hooks:
+      - id: check-merge-conflict
+      - id: trailing-whitespace
+        files: classroom/grading/lab|\.(xml|yaml|yml|asciidoc|adoc|ad|asc)$
+      - id: check-yaml
+        # The "-m" option allows multi-document YAML files
+        args:
+          - "-m"
+        files: ^(?!classroom/materials/troubleshooting).*\.(yaml|yml)$
+
+  - repo: local
+    hooks:
+      - id: asciidoc-file-standards
+        name: Check AsciiDoc Filenaming Standards
+        entry: pre-commit-adoc/asciidoc-file-standards/asciidoc-file-standards.sh
+        language: script
+        files: ^guides/en-US/.+\.(asciidoc|adoc|ad|asc)$
+      - id: link-checker
+        name: Link Checker
+        entry: pre-commit-adoc/link-checker/link-checker.sh
+        language: script
+        files: ^guides/en-US/.+\.(asciidoc|adoc|ad|asc)$
+      - id: pattern-replacer
+        name: Sed Common Replacement Patterns
+        entry: pre-commit-adoc/pattern-replacer/pattern-replacer.sh
+        language: script
+        files: ^guides/en-US/.+\.(asciidoc|adoc|ad|asc)$
+
+      - id: unsupported-tags-check
+        name: Check for Unsupported Tags
+        entry: pre-commit-adoc/unsupported-tags-check/unsupported-tags-check.sh
+        language: script
+        files: ^guides/en-US/.+\.(asciidoc|adoc|ad|asc)$
+
+      - id: activity-checker
+        name: Check Correct Macro Definition in Activities
+        entry: pre-commit-adoc/activity-checker/activity-checker.sh
+        language: script
+        files: topics/.+/.+\.(asciidoc|adoc|ad|asc)$
+...

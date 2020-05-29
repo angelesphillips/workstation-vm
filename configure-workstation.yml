@@ -11,59 +11,59 @@
     - name: Customize .vimrc
       copy:
         content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
-        dest: /home/{{ local_user }}/.vimrc
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        dest: /home/{{ ansible_env['USERNAME'] }}/.vimrc
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0664
 
     - name: Make Regular Directories
       file:
         path: "{{ item }}"
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0775
       loop:
-        - /home/{{ local_user }}/bin
-        
+        - /home/{{ ansible_env['USERNAME'] }}/bin
+
     - name: Make Secure Directories
       file:
         path: "{{ item }}"
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0700
       loop:
-        - /home/{{ local_user }}/.config
-        
+        - /home/{{ ansible_env['USERNAME'] }}/.config
+
     - name: Configure aliases
       blockinfile:
-        path: /home/{{ local_user }}/.bashrc
+        path: /home/{{ ansible_env['USERNAME'] }}/.bashrc
         marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
         block: "{{ lookup('file', 'files/bashrc_aliases') }}"
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0644
         state: present
 
     - name: Set display resolution to 1280 x 1024
       copy:
         src: files/monitors.xml
-        dest: /home/{{ local_user }}/.config/
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        dest: /home/{{ ansible_env['USERNAME'] }}/.config/
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0600
 
     - name: Copy my-gsettings.sh
       copy:
         src: files/my-gsettings.sh
-        dest: /home/{{ local_user }}/bin/
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        dest: /home/{{ ansible_env['USERNAME'] }}/bin/
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         mode: 0775
 
     - name: Run gsettings
       become: true
-      become_user: "{{ local_user }}"
-      command: /home/{{ local_user }}/bin/my-gsettings.sh
+      become_user: "{{ ansible_env['USERNAME'] }}"
+      command: /home/{{ ansible_env['USERNAME'] }}/bin/my-gsettings.sh
       changed_when: false
 
     - name: Install local RPMs for aspell and ascii-doc
@@ -76,11 +76,11 @@
 
     - name: Apply additional ~/.aspell.conf configuration
       blockinfile:
-        path: /home/{{ local_user }}/.aspell.conf
-        owner: "{{ local_user }}"
-        group: "{{ local_user }}"
+        path: /home/{{ ansible_env['USERNAME'] }}/.aspell.conf
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
         block: |
           #add-asciidoc-blocks ====
           add-asciidoc-tags *
           add-asciidoc-macros
-          
+
