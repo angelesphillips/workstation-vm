@@ -1,6 +1,8 @@
 alias spellr="aspell --mode=asciidoc list | sort | uniq -c | sort -rn"
 alias spellrxml="aspell list | sort | uniq -c | sort -rn"
 alias font-default="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 11'"
+alias font-14="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 14'"
+alias font-15="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 15'"
 alias font-16="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 16'"
 alias font-18="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 18'"
 
