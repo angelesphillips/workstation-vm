@@ -19,6 +19,7 @@
     - name: Make Regular Directories
       file:
         path: "{{ item }}"
+        state: directory
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0775
@@ -28,6 +29,7 @@
     - name: Make Secure Directories
       file:
         path: "{{ item }}"
+        state: directory
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0700
