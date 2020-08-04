@@ -12,3 +12,5 @@ gsettings set org.gnome.shell enabled-extensions "['window-list@gnome-shell-exte
 # Turn off keyboard repeats
 gsettings set org.gnome.desktop.peripherals.keyboard repeat false
 
+# Set favorites
+gsettings set org.gnome.shell favorite-apps "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']"
