@@ -6,6 +6,7 @@
       dnf:
         name:
           - gnome-tweaks
+          - python3-psutil
         state: latest
 
     - name: Customize .vimrc
@@ -54,16 +55,37 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0600
 
-    - name: Copy my-gsettings.sh
-      copy:
-        src: files/my-gsettings.sh
-        dest: /home/{{ ansible_env['USERNAME'] }}/bin/
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
-        mode: 0775
-
-    - name: Run gsettings
+    - name: Use 12-hour clock format instead of 24-hour
       become: true
       become_user: "{{ ansible_env['USERNAME'] }}"
-      command: /home/{{ ansible_env['USERNAME'] }}/bin/my-gsettings.sh
-      changed_when: false
+      dconf:
+        key: "/org/gnome/desktop/interface/clock-format"
+        value: "'12h'"
+        
+    - name: Display seconds in the top-bar clock
+      become: true
+      become_user: "{{ ansible_env['USERNAME'] }}"
+      dconf:
+        key: "/org/gnome/desktop/interface/clock-show-seconds"
+        value: "true"
+        
+    - name: Enable the gnome-tweaks extension that shows the window list
+      become: true
+      become_user: "{{ ansible_env['USERNAME'] }}"
+      dconf:
+        key: "/org/gnome/shell/enabled-extensions"
+        value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+        
+    - name: Turn off keyboard repeats
+      become: true
+      become_user: "{{ ansible_env['USERNAME'] }}"
+      dconf:
+        key: "/org/gnome/desktop/peripherals/keyboard/repeat"
+        value: "false"
+        
+    - name: Set favorites
+      become: true
+      become_user: "{{ ansible_env['USERNAME'] }}"
+      dconf:
+        key: "/org/gnome/shell/favorite-apps"
+        value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']"
