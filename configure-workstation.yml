@@ -22,7 +22,7 @@
     - name: Customize .vimrc
       copy:
         content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
-        dest: /home/{{ ansible_env['USERNAME'] }}/.vimrc
+        dest: ~{{ ansible_env['USERNAME'] }}/.vimrc
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0664
@@ -35,7 +35,7 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0775
       loop:
-        - /home/{{ ansible_env['USERNAME'] }}/bin
+        - ~{{ ansible_env['USERNAME'] }}/bin
 
     - name: Make Secure Directories
       file:
@@ -45,11 +45,11 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0700
       loop:
-        - /home/{{ ansible_env['USERNAME'] }}/.config
+        - ~{{ ansible_env['USERNAME'] }}/.config
 
     - name: Configure aliases
       blockinfile:
-        path: /home/{{ ansible_env['USERNAME'] }}/.bashrc
+        path: ~{{ ansible_env['USERNAME'] }}/.bashrc
         marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
         block: "{{ lookup('file', 'files/bashrc_aliases') }}"
         owner: "{{ ansible_env['USERNAME'] }}"
@@ -61,7 +61,7 @@
     #- name: Set display resolution to 1280 x 1024
     #  copy:
     #    src: files/monitors.xml
-    #    dest: /home/{{ ansible_env['USERNAME'] }}/.config/
+    #    dest: ~{{ ansible_env['USERNAME'] }}/.config/
     #    owner: "{{ ansible_env['USERNAME'] }}"
     #    group: "{{ ansible_env['USERNAME'] }}"
     #    mode: 0600
@@ -102,8 +102,8 @@
         value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']"
 
     - name: Configure basic git settings
-      become: yes
-      become_user: "{{ local_user }}"
+      become: true
+      become_user: "{{ ansible_env['USERNAME'] }}"
       git_config:
         scope: global
         name: "{{ item['name'] }}"
