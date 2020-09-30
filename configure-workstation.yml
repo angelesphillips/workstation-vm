@@ -1,6 +1,16 @@
 ---
 - name: Configure workstation VM
   hosts: localhost
+  vars:
+    git:
+      - name: user.name
+        value: Michael Phillips
+      - name: user.email
+        value: miphilli@redhat.com
+      - name: push.default
+        value: simple
+      - name: credential.https://github.com.username
+        value: angelesphillips
   tasks:
     - name: Install software
       dnf:
@@ -90,3 +100,13 @@
       dconf:
         key: "/org/gnome/shell/favorite-apps"
         value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']"
+
+    - name: Configure basic git settings
+      become: yes
+      become_user: "{{ local_user }}"
+      git_config:
+        scope: global
+        name: "{{ item['name'] }}"
+        value: "{{ item['value'] }}"
+      loop: "{{ git }}"
+      tags: git
