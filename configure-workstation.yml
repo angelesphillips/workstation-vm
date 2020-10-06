@@ -19,14 +19,6 @@
           - python3-psutil
         state: latest
 
-    - name: Customize .vimrc
-      copy:
-        content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
-        dest: ~{{ ansible_env['USERNAME'] }}/.vimrc
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
-        mode: 0664
-
     - name: Make Regular Directories
       file:
         path: "{{ item }}"
@@ -110,3 +102,61 @@
         value: "{{ item['value'] }}"
       loop: "{{ git }}"
       tags: git
+
+    # Customize vim, nano, and gedit to use:
+    # - tabs instead of spaces
+    # - tabs = 2 spaces
+    # - auto indent
+    - name: Customize .vimrc
+      become: true
+      become_user: "{{ item }}"
+      copy:
+        content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
+        dest: ~{{ item }}/.vimrc
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: 0644
+      loop:
+        - root
+        - devops
+        - student
+
+    - name: Customize .nanorc
+      become: true
+      become_user: "{{ item }}"
+      copy:
+        content: |
+          set tabsize 2
+          set tabstospaces
+          set autoindent
+        dest: ~{{ item }}/.nanorc
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: 0644
+      loop:
+        - root
+        - devops
+        - student
+
+    - name: Configure gedit settings
+      become: true
+      become_user: "{{ item[0] }}"
+      vars:
+        gedit_prefs:
+          - key: /org/gnome/gedit/preferences/editor/insert-spaces
+            value: "true"
+          - key: /org/gnome/gedit/preferences/editor/tabs-size
+            value: "uint32 2"
+          - key: /org/gnome/gedit/preferences/editor/auto-indent
+            value: "true" 
+        users:
+          - devops
+          - student
+      dconf:
+        key: "{{ item[1]['key'] }}"
+        value: "{{ item[1]['value'] }}"
+      with_nested:
+        - "{{ users }}"
+        - "{{ gedit_prefs }}"
+      loop_control:
+        label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
