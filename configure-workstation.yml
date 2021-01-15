@@ -1,17 +1,12 @@
 ---
 - name: Configure workstation VM
   hosts: localhost
-  vars:
-    git:
-      - name: user.name
-        value: Michael Phillips
-      - name: user.email
-        value: miphilli@redhat.com
-      - name: push.default
-        value: simple
-      - name: credential.https://github.com.username
-        value: angelesphillips
+  become: true
   tasks:
+    - name: Include additional variables
+      include_vars: "{{ vars_file }}"
+      when: vars_file is defined
+
     - name: Install software
       dnf:
         name:
@@ -48,15 +43,6 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0644
         state: present
-
-    # No longer works
-    #- name: Set display resolution to 1280 x 1024
-    #  copy:
-    #    src: files/monitors.xml
-    #    dest: ~{{ ansible_env['USERNAME'] }}/.config/
-    #    owner: "{{ ansible_env['USERNAME'] }}"
-    #    group: "{{ ansible_env['USERNAME'] }}"
-    #    mode: 0600
 
     - name: Use 12-hour clock format instead of 24-hour
       become: true
@@ -101,7 +87,43 @@
         name: "{{ item['name'] }}"
         value: "{{ item['value'] }}"
       loop: "{{ git }}"
-      tags: git
+      when: git is defined
+
+    - name: Add GitHub keys for {{ git_fullname }}
+      copy:
+        content: "{{ item['data'] }}"
+        dest: ~{{ ansible_env['USERNAME'] }}/.ssh/{{ item['name'] }}
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
+        mode: "{{ item['mode'] }}"
+      when:
+        - git is defined
+        - github_keys is defined
+      loop: "{{ github_keys }}"
+      loop_control:
+        label: Adding key {{ item['name'] }} to ~{{ ansible_env['USERNAME'] }}/.ssh/
+
+    - name: Add block to ~{{ ansible_env['USERNAME'] }}/.ssh/config
+      blockinfile:
+        path: ~{{ ansible_env['USERNAME'] }}/.ssh/config
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
+        mode: 0644
+        state: present
+        create: true
+        insertafter: EOF
+        marker_begin: BEGIN GITHUB
+        block: |
+          Host github.com
+            User git
+            IdentityFile ~/.ssh/{{ item['name'] }}
+            StrictHostKeyChecking accept-new
+      when:
+        - github_keys is defined
+        - item['type'] == "private"
+      loop: "{{ github_keys }}"
+      loop_control:
+        label: Adding github block to ~{{ ansible_env['USERNAME'] }}/.ssh/config
 
     # Customize vim, nano, and gedit to use:
     # - tabs instead of spaces
@@ -118,7 +140,7 @@
         mode: 0644
       loop:
         - root
-        - devops
+        - "{{ ansible_env['USERNAME'] }}"
         - student
 
     - name: Customize .nanorc
@@ -135,7 +157,7 @@
         mode: 0644
       loop:
         - root
-        - devops
+        - "{{ ansible_env['USERNAME'] }}"
         - student
 
     - name: Configure gedit settings
@@ -150,7 +172,7 @@
           - key: /org/gnome/gedit/preferences/editor/auto-indent
             value: "true" 
         users:
-          - devops
+          - "{{ ansible_env['USERNAME'] }}"
           - student
       dconf:
         key: "{{ item[1]['key'] }}"

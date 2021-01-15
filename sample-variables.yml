@@ -1,0 +1,22 @@
+github_keys:
+  - name: github_rsa
+    mode: '0600'
+    type: private
+    data: |
+      <PRIVATE SSH KEY USED TO ACCESS GITHUB>
+  - name: github_rsa.pub
+    mode: '0644'
+    type: public
+    data: |
+      <PUBLIC SSH KEY ASSOCIATED WITH PRIVATE GITHUB SSH KEY>
+git:
+  - name: user.name
+    value: <YOUR FULL NAME>
+  - name: user.email
+    value: <YOUR EMAIL>
+  - name: push.default
+    value: simple
+  - name: credential.https://github.com.username
+    value: <YOUR GITHUB USERNAME>
+  - name: credential.helper
+    value: cache
