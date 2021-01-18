@@ -4,8 +4,8 @@
   become: true
   tasks:
     - name: Include additional variables
-      include_vars: "{{ vars_file }}"
-      when: vars_file is defined
+      include_vars: "{{ myvars }}"
+      when: myvars is defined
 
     - name: Install software
       dnf:
@@ -33,6 +33,7 @@
         mode: 0700
       loop:
         - ~{{ ansible_env['USERNAME'] }}/.config
+        - ~{{ ansible_env['USERNAME'] }}/.ssh
 
     - name: Configure aliases
       blockinfile:
