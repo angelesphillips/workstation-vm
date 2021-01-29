@@ -66,12 +66,25 @@
         key: "/org/gnome/shell/enabled-extensions"
         value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
 
+    - name: Check for /etc/rht
+      stat:
+        path: /etc/rht
+      register: rht
+
+    - name: Set venue
+      set_fact:
+        venue: "{{ lookup('file', '/etc/rht') | regex_search('RHT_VENUE=.*') | regex_replace('RHT_VENUE=') | lower }}"
+      when: rht.stat.exists
+
     - name: Turn off keyboard repeats
       become: true
       become_user: "{{ ansible_env['USERNAME'] }}"
       dconf:
         key: "/org/gnome/desktop/peripherals/keyboard/repeat"
-        value: "false"
+        value: "true"
+      when:
+        - venue is defined
+        - venue == "rav"
 
     - name: Set favorites
       become: true
@@ -89,6 +102,17 @@
         value: "{{ item['value'] }}"
       loop: "{{ git }}"
       when: git is defined
+
+    - name: Modify .bashrc to change PS1 prompt for git
+      blockinfile:
+        path: ~{{ ansible_env['USERNAME'] }}/.bashrc
+        marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
+        owner: "{{ ansible_env['USERNAME'] }}"
+        group: "{{ ansible_env['USERNAME'] }}"
+        mode: 0644
+        state: present
+        block: "{{ lookup('file', 'files/bashrc_git') }}"
+      tags: ps1
 
     - name: Add GitHub keys for {{ git_fullname }}
       copy:
