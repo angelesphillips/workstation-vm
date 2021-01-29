@@ -103,6 +103,14 @@
       loop: "{{ git }}"
       when: git is defined
 
+    - name: Add file to /etc/motd.d
+      become: true
+      become_user: root
+      template:
+        src: templates/motd
+        dest: /etc/motd.d/{{ git[3]['value'] }}
+      when: git is defined
+
     - name: Modify .bashrc to change PS1 prompt for git
       blockinfile:
         path: ~{{ ansible_env['USERNAME'] }}/.bashrc
