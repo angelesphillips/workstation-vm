@@ -128,6 +128,21 @@
       loop_control:
         label: Adding key {{ item['name'] }} to ~{{ ansible_env['USERNAME'] }}/.ssh/
 
+    - name: Check for .git/config
+      stat:
+        path: "{{ ansible_env['PWD'] }}/.git/config"
+      register: git_config
+
+    - name: "Change 'https://github.com/' to 'git@github.com:'"
+      lineinfile:
+        path: "{{ ansible_env['PWD'] }}/.git/config"
+        regexp: '^(.*)url = https://github.com/(.*)$'
+        line: '\1url = git@github.com:\2'
+        backrefs: True
+      when:
+        - github_keys is defined
+        - git_config.stat.exists
+
     - name: Add block to ~{{ ansible_env['USERNAME'] }}/.ssh/config
       blockinfile:
         path: ~{{ ansible_env['USERNAME'] }}/.ssh/config
