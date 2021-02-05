@@ -1,3 +1,5 @@
+# The github_keys variable is not necessary. Some developers prefer not to store
+# their GitHub keys on ROL workstation machines.
 github_keys:
   - name: github_rsa
     mode: '0600'
@@ -19,4 +21,6 @@ git:
   - name: credential.https://github.com.username
     value: <YOUR GITHUB USERNAME>
   - name: credential.helper
-    value: cache
+    value: cache --timeout=14400
+  - name: core.autocrlf
+    value: input
