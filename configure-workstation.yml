@@ -91,7 +91,7 @@
       become_user: "{{ ansible_env['USERNAME'] }}"
       dconf:
         key: "/org/gnome/shell/favorite-apps"
-        value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop']"
+        value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
     - name: Configure basic git settings
       become: true
