@@ -24,3 +24,5 @@ git:
     value: cache --timeout=14400
   - name: core.autocrlf
     value: input
+  - name: pull.rebase
+    value: true
