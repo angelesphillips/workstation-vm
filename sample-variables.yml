@@ -25,4 +25,4 @@ git:
   - name: core.autocrlf
     value: input
   - name: pull.rebase
-    value: true
+    value: "true"
