@@ -1,13 +1,13 @@
 ---
 - name: Configure workstation VM
   hosts: localhost
-  become: true
   tasks:
-    - name: Include additional variables
-      include_vars: "{{ myvars }}"
-      when: myvars is defined
+    #- name: Include additional variables
+    #  include_vars: "{{ myvars }}"
+    #  when: myvars is defined
 
     - name: Install software
+      become: true
       dnf:
         name:
           - gnome-tweaks
@@ -22,7 +22,7 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0775
       loop:
-        - ~{{ ansible_env['USERNAME'] }}/bin
+        - "{{ ansible_env['HOME'] }}/bin"
 
     - name: Make Secure Directories
       file:
@@ -32,12 +32,12 @@
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0700
       loop:
-        - ~{{ ansible_env['USERNAME'] }}/.config
-        - ~{{ ansible_env['USERNAME'] }}/.ssh
+        - "{{ ansible_env['HOME'] }}/.config"
+        - "{{ ansible_env['HOME'] }}/.ssh"
 
     - name: Configure aliases
       blockinfile:
-        path: ~{{ ansible_env['USERNAME'] }}/.bashrc
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
         marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
         block: "{{ lookup('file', 'files/bashrc_aliases') }}"
         owner: "{{ ansible_env['USERNAME'] }}"
@@ -94,8 +94,6 @@
         value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
     - name: Configure basic git settings
-      become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
       git_config:
         scope: global
         name: "{{ item['name'] }}"
@@ -105,7 +103,6 @@
 
     - name: Add file to /etc/motd.d
       become: true
-      become_user: root
       template:
         src: templates/motd
         dest: /etc/motd.d/{{ git[3]['value'] }}
@@ -113,7 +110,7 @@
 
     - name: Modify .bashrc to change PS1 prompt for git
       blockinfile:
-        path: ~{{ ansible_env['USERNAME'] }}/.bashrc
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
         marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
@@ -125,7 +122,7 @@
     - name: Add GitHub keys for {{ git_fullname }}
       copy:
         content: "{{ item['data'] }}"
-        dest: ~{{ ansible_env['USERNAME'] }}/.ssh/{{ item['name'] }}
+        dest: "{{ ansible_env['HOME'] }}/.ssh/{{ item['name'] }}"
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
         mode: "{{ item['mode'] }}"
@@ -134,7 +131,7 @@
         - github_keys is defined
       loop: "{{ github_keys }}"
       loop_control:
-        label: Adding key {{ item['name'] }} to ~{{ ansible_env['USERNAME'] }}/.ssh/
+        label: Adding key {{ item['name'] }} to {{ ansible_env['HOME'] }}/.ssh/
 
     - name: Check for .git/config
       stat:
@@ -151,9 +148,9 @@
         - github_keys is defined
         - git_config.stat.exists
 
-    - name: Add block to ~{{ ansible_env['USERNAME'] }}/.ssh/config
+    - name: Add block to {{ ansible_env['HOME'] }}/.ssh/config
       blockinfile:
-        path: ~{{ ansible_env['USERNAME'] }}/.ssh/config
+        path: "{{ ansible_env['HOME'] }}/.ssh/config"
         owner: "{{ ansible_env['USERNAME'] }}"
         group: "{{ ansible_env['USERNAME'] }}"
         mode: 0644
@@ -171,7 +168,7 @@
         - item['type'] == "private"
       loop: "{{ github_keys }}"
       loop_control:
-        label: Adding github block to ~{{ ansible_env['USERNAME'] }}/.ssh/config
+        label: Adding github block to {{ ansible_env['HOME'] }}/.ssh/config
 
     # Customize vim, nano, and gedit to use:
     # - tabs instead of spaces
@@ -181,32 +178,21 @@
       become: true
       become_user: "{{ item }}"
       copy:
-        content: "set ai et ts=2 sts=2 sw=2 colorcolumn=80"
-        dest: ~{{ item }}/.vimrc
-        owner: "{{ item }}"
-        group: "{{ item }}"
-        mode: 0644
+        src: files/vimrc
+        dest: "{{ ansible_env['HOME'] }}/.vimrc"
       loop:
         - root
         - "{{ ansible_env['USERNAME'] }}"
-        - student
 
     - name: Customize .nanorc
       become: true
       become_user: "{{ item }}"
       copy:
-        content: |
-          set tabsize 2
-          set tabstospaces
-          set autoindent
-        dest: ~{{ item }}/.nanorc
-        owner: "{{ item }}"
-        group: "{{ item }}"
-        mode: 0644
+        src: files/nanorc
+        dest: "{{ ansible_env['HOME'] }}/.nanorc"
       loop:
         - root
         - "{{ ansible_env['USERNAME'] }}"
-        - student
 
     - name: Configure gedit settings
       become: true
@@ -221,7 +207,6 @@
             value: "true" 
         users:
           - "{{ ansible_env['USERNAME'] }}"
-          - student
       dconf:
         key: "{{ item[1]['key'] }}"
         value: "{{ item[1]['value'] }}"
