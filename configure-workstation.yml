@@ -18,8 +18,8 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0775
       loop:
         - "{{ ansible_env['HOME'] }}/bin"
@@ -28,8 +28,8 @@
       file:
         path: "{{ item }}"
         state: directory
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0700
       loop:
         - "{{ ansible_env['HOME'] }}/.config"
@@ -40,28 +40,28 @@
         path: "{{ ansible_env['HOME'] }}/.bashrc"
         marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
         block: "{{ lookup('file', 'files/bashrc_aliases') }}"
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0644
         state: present
 
     - name: Use 12-hour clock format instead of 24-hour
       become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
+      become_user: "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "/org/gnome/desktop/interface/clock-format"
         value: "'12h'"
 
     - name: Display seconds in the top-bar clock
       become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
+      become_user: "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "/org/gnome/desktop/interface/clock-show-seconds"
         value: "true"
 
     - name: Enable the gnome-tweaks extension that shows the window list
       become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
+      become_user: "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "/org/gnome/shell/enabled-extensions"
         value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
@@ -78,7 +78,7 @@
 
     - name: Turn off keyboard repeats
       become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
+      become_user: "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "/org/gnome/desktop/peripherals/keyboard/repeat"
         value: "true"
@@ -88,7 +88,7 @@
 
     - name: Set favorites
       become: true
-      become_user: "{{ ansible_env['USERNAME'] }}"
+      become_user: "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "/org/gnome/shell/favorite-apps"
         value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
@@ -112,8 +112,8 @@
       blockinfile:
         path: "{{ ansible_env['HOME'] }}/.bashrc"
         marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0644
         state: present
         block: "{{ lookup('file', 'files/bashrc_git') }}"
@@ -123,8 +123,8 @@
       copy:
         content: "{{ item['data'] }}"
         dest: "{{ ansible_env['HOME'] }}/.ssh/{{ item['name'] }}"
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: "{{ item['mode'] }}"
       when:
         - git is defined
@@ -151,8 +151,8 @@
     - name: Add block to {{ ansible_env['HOME'] }}/.ssh/config
       blockinfile:
         path: "{{ ansible_env['HOME'] }}/.ssh/config"
-        owner: "{{ ansible_env['USERNAME'] }}"
-        group: "{{ ansible_env['USERNAME'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0644
         state: present
         create: true
@@ -182,7 +182,7 @@
         dest: "{{ ansible_env['HOME'] }}/.vimrc"
       loop:
         - root
-        - "{{ ansible_env['USERNAME'] }}"
+        - "{{ ansible_env['LOGNAME'] }}"
 
     - name: Customize .nanorc
       become: true
@@ -192,7 +192,7 @@
         dest: "{{ ansible_env['HOME'] }}/.nanorc"
       loop:
         - root
-        - "{{ ansible_env['USERNAME'] }}"
+        - "{{ ansible_env['LOGNAME'] }}"
 
     - name: Configure gedit settings
       become: true
@@ -206,7 +206,7 @@
           - key: /org/gnome/gedit/preferences/editor/auto-indent
             value: "true" 
         users:
-          - "{{ ansible_env['USERNAME'] }}"
+          - "{{ ansible_env['LOGNAME'] }}"
       dconf:
         key: "{{ item[1]['key'] }}"
         value: "{{ item[1]['value'] }}"
