@@ -215,3 +215,12 @@
         - "{{ gedit_prefs }}"
       loop_control:
         label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
+
+    - name: Fix owner:group on {{ ansible_env['HOME'] }}
+      become: true
+      ansible.builtin.file:
+        path: "{{ ansible_env['HOME'] }}"
+        state: directory
+        recurse: yes
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
