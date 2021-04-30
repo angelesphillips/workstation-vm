@@ -2,9 +2,22 @@
 - name: Configure workstation VM
   hosts: localhost
   tasks:
-    #- name: Include additional variables
-    #  include_vars: "{{ myvars }}"
-    #  when: myvars is defined
+    - block:
+        - name: Query for monitor output name
+          shell: 'xrandr | grep "connected primary" | cut -d" " -f1'
+          register: xrandr_output
+
+        - name: Show xrandr_output
+          debug:
+            var: xrandr_outpu['stdout']
+
+        - name: Change resolution (dryrun)
+          # The command fails if attempting to set to an unsupported resolution
+          command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }} --dryrun
+
+        - name: Change resolution
+          command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }}
+      when: resolution is defined
 
     - name: Install software
       become: true
@@ -35,11 +48,21 @@
         - "{{ ansible_env['HOME'] }}/.config"
         - "{{ ansible_env['HOME'] }}/.ssh"
 
-    - name: Configure aliases
+    - name: Configure font aliases
       blockinfile:
         path: "{{ ansible_env['HOME'] }}/.bashrc"
-        marker: "# {mark} ANSIBLE MANAGED BLOCK ALIASES"
-        block: "{{ lookup('file', 'files/bashrc_aliases') }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK FONT ALIASES"
+        block: "{{ lookup('file', 'files/bashrc_aliases_font') }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+
+    - name: Configure spellr aliases
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK SPELLR ALIASES"
+        block: "{{ lookup('file', 'files/bashrc_aliases_spellr') }}"
         owner: "{{ ansible_env['LOGNAME'] }}"
         group: "{{ ansible_env['LOGNAME'] }}"
         mode: 0644

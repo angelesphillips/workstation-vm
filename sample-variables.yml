@@ -1,3 +1,4 @@
+resolution: "1600x900"
 # The github_keys variable is not necessary. Some developers prefer not to store
 # their GitHub keys on ROL workstation machines.
 github_keys:
