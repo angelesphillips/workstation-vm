@@ -123,6 +123,7 @@
         value: "{{ item['value'] }}"
       loop: "{{ git }}"
       when: git is defined
+      tags: git
 
     - name: Add file to /etc/motd.d
       become: true
