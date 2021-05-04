@@ -9,7 +9,7 @@
 
         - name: Show xrandr_output
           debug:
-            var: xrandr_outpu['stdout']
+            var: xrandr_output['stdout']
 
         - name: Change resolution (dryrun)
           # The command fails if attempting to set to an unsupported resolution
