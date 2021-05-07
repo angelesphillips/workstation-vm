@@ -207,6 +207,8 @@
       loop:
         - root
         - "{{ ansible_env['LOGNAME'] }}"
+      tags: editors
+      ignore_errors: True
 
     - name: Customize .nanorc
       become: true
@@ -217,6 +219,8 @@
       loop:
         - root
         - "{{ ansible_env['LOGNAME'] }}"
+      tags: editors
+      ignore_errors: True
 
     - name: Configure gedit settings
       become: true
@@ -239,3 +243,5 @@
         - "{{ gedit_prefs }}"
       loop_control:
         label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
+      tags: editors
+      ignore_errors: True
