@@ -1,23 +1,21 @@
 ifndef::backend-docbook5,backend-docbook45[:imagesdir: ../../..]
 [id='networkingress-lecture']
-= Section Content
+= Exposing Applications for External Access
 
 == Kubernetes Ingress
 
 Kubernetes assigns IP addresses to pods and services.
-Although the Kubernetes cluster typically allows internal communication between the pods and services, the IP addresses are not accessible outside of the cluster.
-
-Many services, such as database services, should not be exposed directly.
-Web application pods can communicate with the database service pods without needing external access.
+Pod and service IP addresses are not usually accessible outside of the cluster.
+Unless prevented by network policies, the Kubernetes cluster typically allows internal communication between pods and services.
+This internal commnication allows application pods to interact with services that are not externally accessible, such as database services.
 
 For a web service that requires external access, create a Kubernetes ingress resource.
 On its own, the ingress resource does not provide access.
 The ingress resource interacts with the Kubernetes ingress controller to provide external access to a service over HTTP or HTTPS.
 
-=== Kubernetes Ingress Controller
+== Kubernetes Ingress Controller
 
-Kubernetes supports multiple ingress controllers.
-In addition to supporting multiple ingress controllers, the Kubernetes project maintains the following ingress controllers:
+Kubernetes supports multiple ingress controllers, and the Kubernetes project maintains the following ingress controllers:
 
 AWS::
 Use the AWS ingress controller if your Kubernetes cluster uses Amazon Web Services.
@@ -28,7 +26,7 @@ Use the GCE ingress controller if your Kubernetes cluster uses Google Compute En
 nginx::
 The nginx ingress controller is the default for `minikube`.
 
-The implementation details for each ingress controller vary based on the type of the Kubernetes cluster.
+The implementation details for each ingress controller vary based on the type of Kubernetes cluster.
 For example, run the `minikube addons enable ingress` command to enable the nginx ingress controller in a `minikube` environment.
 Be aware that even this command depends on how the `minikube` environment is configured on your local machine.
 Attempting to enable the ingress add-on when using the default `docker` driver results in the following error message:
@@ -36,7 +34,7 @@ Attempting to enable the ingress add-on when using the default `docker` driver r
 ----
 $ minikube addons enable ingress
 
-❌  Exiting due to MK_USAGE: Due to networking limitations of driver docker on darwin, ingress addon is not supported.
+X  Exiting due to MK_USAGE: Due to networking limitations of driver docker on darwin, ingress addon is not supported.
 Alternatively to use this addon you can use a vm-based driver:
 
   'minikube start --vm=true'
@@ -45,19 +43,19 @@ Alternatively to use this addon you can use a vm-based driver:
   https://github.com/kubernetes/minikube/issues/7332
 ----
 
-One way to resolve this error is to configure the `minikube` environment to use the `hyperkit` driver.
+Configuring the `minikube` environment to use the `hyperkit` driver resolves this error.
 
 ----
 $ minikube config set driver hyperkit
-❗  These changes will take effect upon a minikube delete and then a minikube start
+!  These changes will take effect upon a minikube delete and then a minikube start
 ----
 
-Pods for the ingress controller run in a separate namespace.
+Ingress controller pods run in a separate namespace.
 Pod names and namespace names vary based on the type of ingress controller.
 For example, in a `minikube` environment, the nginx ingress controller runs in the `ingress-nginx` namespace using the `ingress-nginx-controller` pod.
 
-Your ability to see this namespace and the pods within it depends upon the permissions granted to your user.
-Many developers do not have administrative permissions on their Kubernetes clusters and cannot view these resources.
+Your ability to see Kubernetes cluster resources, such as namespaces and pods, depends upon the permissions granted to your user.
+Many developers do not have administrative permissions on their Kubernetes clusters and cannot view cluster resources.
 
 Developer Sandbox for Red{nbsp}Hat OpenShift provides a development Kubernetes environment.
 By default, OpenShift uses the HAProxy ingress controller.
@@ -94,7 +92,7 @@ spec:
 <1> The name of the ingress resource.
 <2> A list of annotations for the ingress resource.
 Annotations are required for some ingress controllers, such as nginx, but are not required for other ingress controllers, such as HAProxy.
-Consult the documentation for ingress controller used by your Kubernetes cluster.
+Consult the documentation for the ingress controller used by your Kubernetes cluster.
 <3> An individual nginx annotation.
 The nginx ingress controller offers many ways to manipulate an incoming request and redirect it appropriately.
 This annotation X...
@@ -111,6 +109,8 @@ A `pathType` of `Exact` requires the requested URL to exactly match the `path` v
 <8> The port number on which the service listens.
 
 == Testing Your Ingress
+
+Some stuff about testing your ingress.
 
 == {nbsp}
 
