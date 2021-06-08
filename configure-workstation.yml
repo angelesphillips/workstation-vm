@@ -200,48 +200,45 @@
     # - auto indent
     - name: Customize .vimrc
       become: true
-      become_user: "{{ item }}"
+      become_user: student
       copy:
         src: files/vimrc
-        dest: "~{{ item }}/.vimrc"
-      loop:
-        - root
-        - "{{ ansible_env['LOGNAME'] }}"
+        dest: "~student/.vimrc"
       tags: editors
       ignore_errors: True
 
-    - name: Customize .nanorc
-      become: true
-      become_user: "{{ item }}"
-      copy:
-        src: files/nanorc
-        dest: "~{{ item }}/.nanorc"
-      loop:
-        - root
-        - "{{ ansible_env['LOGNAME'] }}"
-      tags: editors
-      ignore_errors: True
+      #- name: Customize .nanorc
+      #  become: true
+      #  become_user: "{{ item }}"
+      #  copy:
+      #    src: files/nanorc
+      #    dest: "~{{ item }}/.nanorc"
+      #  loop:
+      #    - root
+      #    - "{{ ansible_env['LOGNAME'] }}"
+      #  tags: editors
+      #  ignore_errors: True
 
-    - name: Configure gedit settings
-      become: true
-      become_user: "{{ item[0] }}"
-      vars:
-        gedit_prefs:
-          - key: /org/gnome/gedit/preferences/editor/insert-spaces
-            value: "true"
-          - key: /org/gnome/gedit/preferences/editor/tabs-size
-            value: "uint32 2"
-          - key: /org/gnome/gedit/preferences/editor/auto-indent
-            value: "true" 
-        users:
-          - "{{ ansible_env['LOGNAME'] }}"
-      dconf:
-        key: "{{ item[1]['key'] }}"
-        value: "{{ item[1]['value'] }}"
-      with_nested:
-        - "{{ users }}"
-        - "{{ gedit_prefs }}"
-      loop_control:
-        label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
-      tags: editors
-      ignore_errors: True
+      #- name: Configure gedit settings
+      #  become: true
+      #  become_user: "{{ item[0] }}"
+      #  vars:
+      #    gedit_prefs:
+      #      - key: /org/gnome/gedit/preferences/editor/insert-spaces
+      #        value: "true"
+      #      - key: /org/gnome/gedit/preferences/editor/tabs-size
+      #        value: "uint32 2"
+      #      - key: /org/gnome/gedit/preferences/editor/auto-indent
+      #        value: "true"
+      #    users:
+      #      - "{{ ansible_env['LOGNAME'] }}"
+      #  dconf:
+      #    key: "{{ item[1]['key'] }}"
+      #    value: "{{ item[1]['value'] }}"
+      #  with_nested:
+      #    - "{{ users }}"
+      #    - "{{ gedit_prefs }}"
+      #  loop_control:
+      #    label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
+      #  tags: editors
+      #  ignore_errors: True
