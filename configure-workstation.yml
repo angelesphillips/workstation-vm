@@ -71,6 +71,9 @@
 
     - name: Add file to /etc/motd.d
       become: true
+      vars:
+        message: "This system is being used by {{ git[0]['value'] }}!"
+        formatted_msg: "=={% for x in range((left_pad|int) - 1) %} {% endfor %}{{ message }}{% for y in range((right_pad|int) - 1) %} {% endfor %}=="
       template:
         src: templates/motd
         dest: /etc/motd.d/{{ git[3]['value'] }}
