@@ -72,7 +72,10 @@
     - name: Add file to /etc/motd.d
       become: true
       vars:
+        width: 78
         message: "This system is being used by {{ git[0]['value'] }}!"
+        left_pad: "{{ (width - (message | length)) // 2 }}"
+        right_pad: "{{ ((width - (message | length)) // 2) + ((width - (message | length)) % 2) }}"
         formatted_msg: "=={% for x in range((left_pad|int) - 1) %} {% endfor %}{{ message }}{% for y in range((right_pad|int) - 1) %} {% endfor %}=="
       template:
         src: templates/motd
