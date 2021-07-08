@@ -1,6 +1,31 @@
 alias spellr="aspell --mode=asciidoc list | sort | uniq -c | sort -rn"
 alias spellrxml="aspell list | sort | uniq -c | sort -rn"
 
+function spellr_all {
+  FILE="${1}"
+  if [ -n "${FILE}" ]
+  then
+    FILE_BASE="$(echo ${FILE} | sed 's/\(.*\)\..*/\1/')"
+    if [ -f "${FILE_BASE}.adoc" ]
+    then
+      echo "Checking ADOC spelling:"
+      echo "======================="
+      cat ${FILE_BASE}.adoc | spellr
+      echo
+    fi
+    if [ -f "${FILE_BASE}.xml" ]
+    then
+      echo "Checking XML spelling:"
+      echo "======================="
+      cat ${FILE_BASE}.xml | spellrxml
+      echo
+    fi
+  else
+    echo "Syntax: spellr_all <PATH-TO-FILE>" 1>&2
+    exit 1
+  fi
+}
+
 function spellr_dir {
   if [ -f /tmp/check-spelling-raw.txt ]
   then
