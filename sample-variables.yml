@@ -23,7 +23,7 @@ git:
   - name: credential.https://github.com.username
     value: <YOUR GITHUB USERNAME>
   - name: credential.helper
-    value: cache --timeout=14400
+    value: cache --timeout=28800
   - name: core.autocrlf
     value: input
   - name: pull.rebase
