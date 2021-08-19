@@ -2,22 +2,31 @@
 - name: Configure workstation VM
   hosts: localhost
   tasks:
-    - block:
-        - name: Query for monitor output name
-          shell: 'xrandr | grep "connected primary" | cut -d" " -f1'
-          register: xrandr_output
+    # This section is commented out because it isn't persistent.
+    #- block:
+    #    - name: Query for monitor output name
+    #      shell: 'xrandr | grep "connected primary" | cut -d" " -f1'
+    #      register: xrandr_output
 
-        - name: Show xrandr_output
-          debug:
-            var: xrandr_output['stdout']
+    #    - name: Show xrandr_output
+    #      debug:
+    #        var: xrandr_output['stdout']
 
-        - name: Change resolution (dryrun)
-          # The command fails if attempting to set to an unsupported resolution
-          command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }} --dryrun
+    #    - name: Change resolution (dryrun)
+    #      # The command fails if attempting to set to an unsupported resolution
+    #      command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }} --dryrun
 
-        - name: Change resolution
-          command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }}
-      when: resolution is defined
+    #    - name: Change resolution
+    #      command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }}
+    #      register: change_resolution
+
+    #    - name: Update dconf
+    #      become: true
+    #      become_user: "{{ ansible_env['LOGNAME'] }}"
+    #      command: dconf update
+    #      when: change_resolution['changed'] | bool == True
+
+    #  when: resolution is defined
 
     - name: Make Regular Directories
       file:
@@ -250,3 +259,23 @@
             key: "/org/gnome/shell/favorite-apps"
             value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
+        - name: Fix locked RHEL 8.4 background
+          become: true
+          file:
+            path: /etc/dconf/db/local.d/locks/00-default-wallpaper
+            state: absent
+          when: ansible_facts['distribution_version'] == "8.4"
+          register: background_fix
+
+        - name: Update dconf
+          become: true
+          command: dconf update
+          when: background_fix['changed'] | bool == True
+
+        - name: Set new background
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          dconf:
+            key: "org/gnome/desktop/background/picture-uri"
+            value: "file:///usr/share/backgrounds/circles-dark.xml"
+          when: background_fix['changed'] | bool == True
