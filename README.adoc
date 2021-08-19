@@ -1,0 +1,29 @@
+= Customizations for the workstation VM
+
+[NOTE]
+====
+The `configure-workstation.yml` playbook contains customizations for the workstation VM preferred by Michael Phillips.
+You might decide to fork the https://github.com/angelesphillips/workstation-vm repository and make your own customizations.
+====
+
+If workstation uses Ansible 2.11 (from the `ansible-core` package) rather than Ansible 2.9 (from the `ansible` package), then install required content collections for the playbook using the `ansible-galaxy` command.
+
+[subs="+quotes"]
+----
+[student@workstation workstation-vm]$ *ansible-galaxy collection install -r requirements.yml*
+----
+
+Copy `sample-variables.yml` and customize it with your information.
+Encrypt your copy of the `sample-variables.yml` file using the `ansible-vault` command:
+
+[subs="+quotes"]
+----
+[student@workstation workstation-vm]$ *$ ansible-vault encrypt <YOUR-VARIABLES-FILE>*
+----
+
+Run the `configure-workstation.yml` playbook using your variables file:
+
+[subs="+quotes"]
+----
+[student@workstation workstation-vm]$ *ansible-playbook configure-workstation.yml -e @<YOUR-VARIABLES-FILE> --ask-vault-pass -K*
+----
