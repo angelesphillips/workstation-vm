@@ -272,10 +272,11 @@
           command: dconf update
           when: background_fix['changed'] | bool == True
 
-        - name: Set new background
-          become: true
-          become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "org/gnome/desktop/background/picture-uri"
-            value: "file:///usr/share/backgrounds/circles-dark.xml"
-          when: background_fix['changed'] | bool == True
+        # Commenting out for now. Something about the value is wrong.
+        #- name: Set new background
+        #  become: true
+        #  become_user: "{{ ansible_env['LOGNAME'] }}"
+        #  dconf:
+        #    key: "/org/gnome/desktop/background/picture-uri"
+        #    value: "file:///usr/share/backgrounds/circles-dark.xml"
+        #  when: background_fix['changed'] | bool == True
