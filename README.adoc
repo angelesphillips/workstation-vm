@@ -11,6 +11,12 @@ If workstation uses Ansible 2.11 (from the `ansible-core` package) rather than A
 [subs="+quotes"]
 ----
 [student@workstation workstation-vm]$ *ansible-galaxy collection install -r requirements.yml*
+Starting galaxy collection install process
+Process install dependency map
+Starting collection install process
+Downloading https://galaxy.ansible.com/download/community-general-3.5.0.tar.gz to /home/student/.ansible/tmp/ansible-local-31297q9fz41o/tmp_rnuzv_o/community-general-3.5.0-lnxjf66v
+Installing 'community.general:3.5.0' to '/home/student/.ansible/collections/ansible_collections/community/general'
+community.general:3.5.0 was installed successfully
 ----
 
 Copy `sample-variables.yml` and customize it with your information.
@@ -19,6 +25,9 @@ Encrypt your copy of the `sample-variables.yml` file using the `ansible-vault` c
 [subs="+quotes"]
 ----
 [student@workstation workstation-vm]$ *$ ansible-vault encrypt <YOUR-VARIABLES-FILE>*
+BECOME password: *student*
+Vault password: 
+_...output omitted..._
 ----
 
 Run the `configure-workstation.yml` playbook using your variables file:
