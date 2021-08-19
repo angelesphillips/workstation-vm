@@ -1,18 +1,4 @@
-# Run `xrandr` to see available resolution options. Example: "1600x900"
-resolution: <YOUR DESIRED RESOLUTION>
-# The github_keys variable is not necessary. Some developers prefer not to store
-# their GitHub keys on ROL workstation machines.
-github_keys:
-  - name: github_rsa
-    mode: '0600'
-    type: private
-    data: |
-      <PRIVATE SSH KEY USED TO ACCESS GITHUB>
-  - name: github_rsa.pub
-    mode: '0644'
-    type: public
-    data: |
-      <PUBLIC SSH KEY ASSOCIATED WITH PRIVATE GITHUB SSH KEY>
+---
 git:
   - name: user.name
     value: <YOUR FULL NAME>
@@ -28,3 +14,23 @@ git:
     value: input
   - name: pull.rebase
     value: "true"
+# Use this name/value pair if you access GitHub using a personal access token.
+  - name: 'url.https://github.com/.insteadOf'
+    value: 'git@github.com:'
+# Use this name/value pair if you access GitHub using SSH keys.
+#  - name: 'url.git@github.com:.insteadOf'
+#    value: 'https://github.com/'
+# Define the github_keys variable is you access GitHub using SSH keys.
+# Delete the github_keys varialbe if you access GitHub using a personal
+# access token.
+#github_keys:
+#  - name: github_rsa
+#    mode: '0600'
+#    type: private
+#    data: |
+#      <PRIVATE SSH KEY USED TO ACCESS GITHUB>
+#  - name: github_rsa.pub
+#    mode: '0644'
+#    type: public
+#    data: |
+#      <PUBLIC SSH KEY ASSOCIATED WITH PRIVATE GITHUB SSH KEY>
