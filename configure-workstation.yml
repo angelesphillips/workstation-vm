@@ -203,6 +203,33 @@
       #  ignore_errors: True
 
     - block:
+        - name: Enable GitHub CLI repository
+          become: true
+          copy:
+            src: files/gh-cli.repo
+            dest: /etc/yum.repos.d/gh-cli.repo
+          tags: github
+
+        - name: Install GitHub CLI
+          become: true
+          dnf:
+            name:
+              - gh
+            state: latest
+          tags: github
+
+        - name: Check for GitHub completion file
+          stat:
+            path: /etc/bash_completion.d/gh-cli
+          register: gh_cli_completion
+          tags: github
+
+        - name: Generate GitHub CLI completion
+          become: true
+          shell: gh completion -s bash > /etc/bash_completion.d/gh-cli
+          when: gh_cli_completion['stat']['exists'] | bool == False
+          tags: github
+
         - name: Install software
           become: true
           dnf:
