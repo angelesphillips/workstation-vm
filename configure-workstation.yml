@@ -78,6 +78,13 @@
       when: git is defined
       tags: git
 
+    - name: Extract variables
+      template:
+        src: templates/tmp-git.j2
+        dest: /tmp/git.txt
+      when: git is defined
+      tags: git
+
     - name: Add file to /etc/motd.d
       become: true
       vars:

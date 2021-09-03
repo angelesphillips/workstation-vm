@@ -1,0 +1,6 @@
+---
+git:
+{% for item in git %}
+  - name: "{{ item['name'] }}"
+    value: "{{ item['value'] }}"
+{% endfor %}
