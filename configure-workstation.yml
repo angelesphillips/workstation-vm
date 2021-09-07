@@ -109,6 +109,16 @@
         block: "{{ lookup('file', 'files/bashrc_git') }}"
       tags: ps1
 
+    - name: Modify .bashrc to add the local-git function
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK LOCAL-GIT"
+        block: "{{ lookup('file', 'files/bashrc_local_git') }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+
     - name: Add GitHub keys for {{ git_fullname }}
       copy:
         content: "{{ item['data'] }}"
