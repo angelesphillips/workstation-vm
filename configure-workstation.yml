@@ -1,6 +1,7 @@
 ---
 - name: Configure workstation VM
   hosts: localhost
+  gather_facts: true
   tasks:
     # This section is commented out because it isn't persistent.
     #- block:
