@@ -1,0 +1,17 @@
+---
+- name: Add Automation Hub Token to ~/.bashrc
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars:
+    the_user: student
+  vars_files:
+    - token.yml
+  tasks:
+    - name: Add automation hub token line
+      become: true
+      become_user: "{{ the_user }}"
+      lineinfile:
+        path: "~{{ the_user }}/.bashrc"
+        regexp: "^export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN"
+        line: "export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN='{{ automation_hub_token }}'"
