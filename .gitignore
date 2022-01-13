@@ -1,0 +1,7 @@
+**/*artifact*
+*artifact*
+ansible-navigator.log
+**/ansible-navigator.log
+collections/ansible_collections
+.ssh
+tmp/
