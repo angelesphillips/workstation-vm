@@ -1,7 +1,7 @@
 - name: Configure workstation VM
   hosts: localhost
   vars:
-    tmp_git_file: /tmp/git.txt
+    tmp_git_file: /tmp/git.yml
     github_private: github_rsa
   tasks:
     - name: Check for {{ tmp_git_file }}

@@ -6,7 +6,7 @@
   vars:
     the_user: student
   vars_files:
-    - token.yml
+    - automatin_hub_token.yml
   tasks:
     - name: Add automation hub token line
       become: true
@@ -17,7 +17,7 @@
         line: "export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN='{{ automation_hub_token }}'"
       register: add_token
 
-    - name: Advice running 'source ~/.bashrc'
+    - name: Run 'source ~/.bashrc'
       debug:
         msg: 'Use new bashrc settings: source ~/.bashrc'
       when: add_token['changed'] | bool == True
