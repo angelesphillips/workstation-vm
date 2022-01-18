@@ -1,0 +1,30 @@
+[user]
+  name = {{ git['user']['name'] | default('Student User') }}
+  email = {{ git['user']['email'] | default('student@workstation.lab.example.com') }}
+[push]
+  default = {{ git['push']['default'] | default('simple') }}
+{% if git['credentials'] is defined %}
+{% for the_credential in git['credentials'] %}
+[credential "{{ the_credential['url'] }}"]
+  username = {{ the_credential['username'] }}
+  helper = {{ the_credential['helper'] }}
+{% endfor %}
+{% endif %}
+{% if git['core'] is defined %}
+[core]
+{% for core_item in git['core'] %}
+  {{ core_item['key'] }} = {{ core_item['value'] }}
+{% endfor %}
+{% endif %}
+{% if git['pull'] is defined %}
+[pull]
+{% for pull_item in git['pull'] %}
+  {{ pull_item['key'] }} = "{{ pull_item['value'] }}"
+{% endfor %}
+{% endif %}
+{% if git['urls'] is defined %}
+{% for url_item in git['urls'] %}
+[url "{{ url_item['url'] }}"]
+  {{ url_item['key'] }} = {{ url_item['value'] }}
+{% endfor %}
+{% endif %}

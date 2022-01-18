@@ -71,18 +71,14 @@
         state: present
 
     - name: Configure basic git settings
-      git_config:
-        scope: global
-        name: "{{ item['name'] }}"
-        value: "{{ item['value'] }}"
-      loop: "{{ git }}"
-      when: git is defined
-      tags: git
+      template:
+        src: templates/gitconfig.j2
+        dest: "{{ ansible_env['HOME'] }}/.gitconfig"
 
     - name: Extract variables
       template:
         src: templates/tmp-git.j2
-        dest: /tmp/git.txt
+        dest: /tmp/git.yml
       when: git is defined
       tags: git
 
@@ -90,13 +86,13 @@
       become: true
       vars:
         width: 78
-        message: "This system is being used by {{ git[0]['value'] }}!"
+        message: "This system is being used by {{ git['user']['name'] }}!"
         left_pad: "{{ (width - (message | length)) // 2 }}"
         right_pad: "{{ ((width - (message | length)) // 2) + ((width - (message | length)) % 2) }}"
         formatted_msg: "=={% for x in range((left_pad|int) - 1) %} {% endfor %}{{ message }}{% for y in range((right_pad|int) - 1) %} {% endfor %}=="
       template:
         src: templates/motd
-        dest: /etc/motd.d/{{ git[3]['value'] }}
+        dest: /etc/motd.d/{{ git['user']['email'] | regex_replace('@.*') }}
       when: git is defined
 
     - name: Modify .bashrc to change PS1 prompt for git

@@ -1,25 +1,29 @@
 ---
 git:
-  - name: user.name
-    value: <YOUR FULL NAME>
-  - name: user.email
-    value: <YOUR EMAIL>
-  - name: push.default
-    value: simple
-  - name: credential.https://github.com.username
-    value: <YOUR GITHUB USERNAME>
-  - name: credential.helper
-    value: cache --timeout=28800
-  - name: core.autocrlf
-    value: input
-  - name: pull.rebase
-    value: "true"
-# Use this name/value pair if you access GitHub using a personal access token.
-  - name: 'url.https://github.com/.insteadOf'
-    value: 'git@github.com:'
-# Use this name/value pair if you access GitHub using SSH keys.
-#  - name: 'url.git@github.com:.insteadOf'
-#    value: 'https://github.com/'
+  user:
+    name: YOUR-FULL-NAME
+    email: YOUR-EMAIL
+  push:
+    default: simple
+  credentials:
+    - url: https://github.com
+      username: YOUR-GITHUB-USERNAME
+      helper: cache --timeout=28800
+  core:
+    - key: autocrlf
+      value: input
+  pull:
+    - key: rebase
+      value: "true"
+  urls:
+# Use this block if you access GitHub using a personal access token.
+    - url: https://github.com/
+      key: insteadOf
+      value: 'git@github.com:'
+# Use this block if you access GitHub using SSH keys.
+    #- url: 'git@github.com:'
+    #  key: insteadOf
+    #  value: https://github.com/
 # Define the github_keys variable is you access GitHub using SSH keys.
 # Delete the github_keys varialbe if you access GitHub using a personal
 # access token.
