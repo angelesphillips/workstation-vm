@@ -224,13 +224,15 @@
             dest: /etc/yum.repos.d/gh-cli.repo
           tags: github
 
-        - name: Install GitHub CLI
+        - name: Install software
           become: true
           dnf:
             name:
+              - gnome-tweaks
+              - python3-psutil
+              - libcanberra-gtk2
               - gh
             state: latest
-          tags: github
 
         - name: Check for GitHub completion file
           stat:
@@ -244,34 +246,38 @@
           when: gh_cli_completion['stat']['exists'] | bool == False
           tags: github
 
-        - name: Install software
-          become: true
-          dnf:
-            name:
-              - gnome-tweaks
-              - python3-psutil
-            state: latest
-
         - name: Use 12-hour clock format instead of 24-hour
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "/org/gnome/desktop/interface/clock-format"
-            value: "'12h'"
+          command: "gsettings set org.gnome.desktop.interface clock-format '12h'"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/interface/clock-format"
+          #  value: "'12h'"
 
         - name: Display seconds in the top-bar clock
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "/org/gnome/desktop/interface/clock-show-seconds"
-            value: "true"
+          command: "gsettings set org.gnome.desktop.interface clock-show-seconds true"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/interface/clock-show-seconds"
+          #  value: "true"
 
         - name: Enable the gnome-tweaks extension that shows the window list
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "/org/gnome/shell/enabled-extensions"
-            value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+          command:
+            argv:
+              - gsettings
+              - set 
+              - org.gnome.shell
+              - enabled-extensions 
+              - "['window-list@gnome-shell-extensions.gcampax.github.com']"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/shell/enabled-extensions"
+          #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
 
         - name: Check for /etc/rht
           stat:
@@ -281,24 +287,34 @@
         - name: Set venue
           set_fact:
             venue: "{{ lookup('file', '/etc/rht') | regex_search('RHT_VENUE=.*') | regex_replace('RHT_VENUE=') | lower }}"
-          when: rht.stat.exists
+          when: rht['stat']['exists']|bool == True
 
         - name: Turn off keyboard repeats
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "/org/gnome/desktop/peripherals/keyboard/repeat"
-            value: "true"
+          command: "gsettings set org.gnome.desktop.peripherals.keyboard repeat false"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/peripherals/keyboard/repeat"
+          #  value: "true"
           when:
             - venue is defined
-            - venue == "rav"
+            - venue == "rav" or venue == "novello"
 
         - name: Set favorites
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          dconf:
-            key: "/org/gnome/shell/favorite-apps"
-            value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
+          command:
+            argv:
+              - gsettings
+              - set 
+              - org.gnome.shell
+              - favorite-apps
+              - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/shell/favorite-apps"
+          #  value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
         - name: Fix locked RHEL 8.4 background
           become: true
@@ -317,6 +333,8 @@
         #- name: Set new background
         #  become: true
         #  become_user: "{{ ansible_env['LOGNAME'] }}"
+        #  command: "gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/circles-dark.xml'"
+        #  changed_when: false
         #  dconf:
         #    key: "/org/gnome/desktop/background/picture-uri"
         #    value: "file:///usr/share/backgrounds/circles-dark.xml"
