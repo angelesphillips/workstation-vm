@@ -1,0 +1,251 @@
+---
+- name: Configure workstation VM
+  hosts: localhost
+  gather_facts: true
+  vars_files:
+    - ../no-keys.yml
+  tasks:
+    - name: Make Regular Directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0775
+      loop:
+        - "{{ ansible_env['HOME'] }}/bin"
+
+    - name: Make Secure Directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0700
+      loop:
+        - "{{ ansible_env['HOME'] }}/.config"
+        - "{{ ansible_env['HOME'] }}/.ssh"
+
+    - name: Configure font aliases
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK FONT ALIASES"
+        block: "{{ lookup('file', '../files/bashrc_aliases_font') }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+
+    - name: Configure spellr aliases
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK SPELLR ALIASES"
+        block: "{{ lookup('file', '../files/bashrc_aliases_spellr') }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+
+    - name: Configure basic git settings
+      template:
+        src: ../templates/gitconfig.j2
+        dest: "{{ ansible_env['HOME'] }}/.gitconfig"
+
+    - name: Extract variables
+      template:
+        src: ../templates/tmp-git.j2
+        dest: /tmp/git.yml
+      when: git is defined
+      tags: git
+
+    - name: Add file to /etc/motd.d
+      become: true
+      vars:
+        width: 78
+        message: "This system is being used by {{ git['user']['name'] }}!"
+        left_pad: "{{ (width - (message | length)) // 2 }}"
+        right_pad: "{{ ((width - (message | length)) // 2) + ((width - (message | length)) % 2) }}"
+        formatted_msg: "=={% for x in range((left_pad|int) - 1) %} {% endfor %}{{ message }}{% for y in range((right_pad|int) - 1) %} {% endfor %}=="
+      template:
+        src: ../templates/motd
+        dest: /etc/motd.d/{{ git['user']['email'] | regex_replace('@.*') }}
+      when: git is defined
+
+    - name: Modify .bashrc to change PS1 prompt for git
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+        block: "{{ lookup('file', '../files/bashrc_git') }}"
+      tags: ps1
+
+    - name: Modify .bashrc to add the local-git function
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.bashrc"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK LOCAL-GIT"
+        block: "{{ lookup('file', '../files/bashrc_local_git') }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+
+    - name: Add GitHub keys for {{ git_fullname }}
+      copy:
+        content: "{{ item['data'] }}"
+        dest: "{{ ansible_env['HOME'] }}/.ssh/{{ item['name'] }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: "{{ item['mode'] }}"
+      when:
+        - git is defined
+        - github_keys is defined
+      loop: "{{ github_keys }}"
+      loop_control:
+        label: Adding key {{ item['name'] }} to {{ ansible_env['HOME'] }}/.ssh/
+
+    - name: Check for .git/config
+      stat:
+        path: "{{ ansible_env['PWD'] }}/.git/config"
+      register: git_config
+
+    - name: "Change 'https://github.com/' to 'git@github.com:'"
+      lineinfile:
+        path: "{{ ansible_env['PWD'] }}/.git/config"
+        regexp: '^(.*)url = https://github.com/(.*)$'
+        line: '\1url = git@github.com:\2'
+        backrefs: True
+      when:
+        - github_keys is defined
+        - git_config.stat.exists
+
+    - name: Add block to {{ ansible_env['HOME'] }}/.ssh/config
+      blockinfile:
+        path: "{{ ansible_env['HOME'] }}/.ssh/config"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
+        mode: 0644
+        state: present
+        create: true
+        insertafter: EOF
+        marker_begin: BEGIN GITHUB
+        block: |
+          Host github.com
+            User git
+            IdentityFile ~/.ssh/{{ item['name'] }}
+            StrictHostKeyChecking accept-new
+      when:
+        - github_keys is defined
+        - item['type'] == "private"
+      loop: "{{ github_keys }}"
+      loop_control:
+        label: Adding github block to {{ ansible_env['HOME'] }}/.ssh/config
+
+    - name: Customize .vimrc
+      become: true
+      become_user: student
+      copy:
+        src: ../files/vimrc
+        dest: "~student/.vimrc"
+      tags: editors
+      ignore_errors: True
+
+    - block:
+        - name: Enable GitHub CLI repository
+          become: true
+          copy:
+            src: ../files/gh-cli.repo
+            dest: /etc/yum.repos.d/gh-cli.repo
+          tags: github
+
+        - name: Install software
+          become: true
+          dnf:
+            name:
+              - gnome-tweaks
+              - python3-psutil
+              - libcanberra-gtk2
+              - gh
+            state: latest
+
+        - name: Check for GitHub completion file
+          stat:
+            path: /etc/bash_completion.d/gh-cli
+          register: gh_cli_completion
+          tags: github
+
+        - name: Generate GitHub CLI completion
+          become: true
+          shell: gh completion -s bash > /etc/bash_completion.d/gh-cli
+          when: gh_cli_completion['stat']['exists'] | bool == False
+          tags: github
+
+        - name: Use 12-hour clock format instead of 24-hour
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command: "gsettings set org.gnome.desktop.interface clock-format '12h'"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/interface/clock-format"
+          #  value: "'12h'"
+
+        - name: Display seconds in the top-bar clock
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command: "gsettings set org.gnome.desktop.interface clock-show-seconds true"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/interface/clock-show-seconds"
+          #  value: "true"
+
+        - name: Enable the gnome-tweaks extension that shows the window list
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command:
+            argv:
+              - gnome-extensions
+              - enable
+              - window-list@gnome-shell-extensions.gcampax.github.com
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/shell/enabled-extensions"
+          #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+
+        - name: Check for /etc/rht
+          stat:
+            path: /etc/rht
+          register: rht
+
+        - name: Set venue
+          set_fact:
+            venue: "{{ lookup('file', '/etc/rht') | regex_search('RHT_VENUE=.*') | regex_replace('RHT_VENUE=') | lower }}"
+          when: rht['stat']['exists']|bool == True
+
+        - name: Turn off keyboard repeats
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command: "gsettings set org.gnome.desktop.peripherals.keyboard repeat false"
+          changed_when: false
+          #dconf:
+          #  key: "/org/gnome/desktop/peripherals/keyboard/repeat"
+          #  value: "true"
+          when:
+            - venue is defined
+            - venue == "rav" or venue == "novello"
+
+        - name: Set favorites
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command:
+            argv:
+              - gsettings
+              - set 
+              - org.gnome.shell
+              - favorite-apps
+              - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
+          changed_when: false
+#          #dconf:
+#          #  key: "/org/gnome/shell/favorite-apps"
+#          #  value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
