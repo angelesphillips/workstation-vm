@@ -6,7 +6,7 @@
   vars:
     the_user: student
   vars_files:
-    - automatin_hub_token.yml
+    - automation_hub_token.yml
   tasks:
     - name: Add automation hub token line
       become: true
