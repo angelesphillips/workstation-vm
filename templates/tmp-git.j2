@@ -1,3 +1,40 @@
 ---
 git:
-  {{ git | to_nice_yaml | indent(2) }}
+{% if git['user'] is defined and git['user']['name'] is defined %}
+  - name: user.name
+    value: '{{ git.user.name }}'
+{% endif %}
+{% if git['user'] is defined and git['user']['email'] is defined %}
+  - name: user.email
+    value: {{ git['user']['email'] }}
+{% endif %}
+{% if git['push'] is defined and git['push']['default'] is defined %}
+  - name: push.default
+    value: {{ git['push']['default'] }}
+{% endif %}
+{% if git['credentials'] is defined %}
+{% for the_credential in git['credentials'] %}
+  - name: credential.{{ the_credential['url'] }}.username
+    value: {{ the_credential['username'] }}
+  - name: credential.{{ the_credential['url'] }}.helper
+    value: '{{ the_credential.helper }}'
+{% endfor %}
+{% endif %}
+{% if git['core'] is defined %}
+{% for the_core in git['core'] %}
+  - name: core.{{ the_core['key'] }}
+    value: {{ the_core['value'] }}
+{% endfor %}
+{% endif %}
+{% if git['pull'] is defined %}
+{% for the_pull in git['pull'] %}
+  - name: pull.{{ the_pull['key'] }}
+    value: "{{ the_pull['value'] }}"
+{% endfor %}
+{% endif %}
+{% if git['urls'] is defined %}
+{% for the_url in git['urls'] %}
+  - name: 'url.{{ the_url.url }}.{{ the_url.key }}'
+    value: '{{ the_url.value }}'
+{% endfor %}
+{% endif %}

@@ -1,23 +1,18 @@
 function local-git {
   REPO="${1}"
-  if [ -n "${REPO}" ]
+  if [ -z "${REPO}" ]
   then
-    if [ "${REPO}" == "." ]
+    REPO="${PWD}"
+  fi
+  if [ -d "${REPO}/.git" ]
+  then
+    if [ -f /home/student/workstation-vm/git_playbook.yml ]
     then
-      REPO="${PWD}"
-    fi
-    if [ -d "${REPO}/.git" ]
-    then
-      if [ -f /home/student/workstation-vm/local-git.yml ]
-      then
-        ansible-playbook /home/student/workstation-vm/local-git.yml -e repo=${REPO}
-      else
-        echo "ERROR: Playbook /home/student/workstation-vm/local-git.yml does not exist." 1>&2
-      fi
+      ansible-playbook /home/student/workstation-vm/git_playbook.yml -i /home/student/workstation-vm/inventory -e scope=local -e repo=${REPO}
     else
-      echo "ERROR: ${REPO} is not a git repository." 1>&2
+      echo "ERROR: Playbook /home/student/workstation-vm/git_playbook.yml does not exist." 1>&2
     fi
   else
-    ansible-playbook /home/student/workstation-vm/local-git.yml
+    echo "ERROR: ${REPO} is not a git repository." 1>&2
   fi
 }

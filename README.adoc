@@ -6,19 +6,6 @@ The `configure-workstation.yml` playbook contains customizations for the worksta
 You might decide to fork the https://github.com/angelesphillips/workstation-vm repository and make your own customizations.
 ====
 
-If workstation uses Ansible 2.11 (from the `ansible-core` package) rather than Ansible 2.9 (from the `ansible` package), then install required content collections for the playbook using the `ansible-galaxy` command.
-
-[subs="+quotes"]
-----
-[student@workstation workstation-vm]$ *ansible-galaxy collection install -r requirements.yml*
-Starting galaxy collection install process
-Process install dependency map
-Starting collection install process
-Downloading https://galaxy.ansible.com/download/community-general-3.5.0.tar.gz to /home/student/.ansible/tmp/ansible-local-31297q9fz41o/tmp_rnuzv_o/community-general-3.5.0-lnxjf66v
-Installing 'community.general:3.5.0' to '/home/student/.ansible/collections/ansible_collections/community/general'
-community.general:3.5.0 was installed successfully
-----
-
 Copy `sample-variables.yml` and customize it with your information.
 Encrypt your copy of the `sample-variables.yml` file using the `ansible-vault` command:
 
@@ -34,5 +21,5 @@ Run the `configure-workstation.yml` playbook using your variables file:
 
 [subs="+quotes"]
 ----
-[student@workstation workstation-vm]$ *ansible-playbook configure-workstation.yml -e @<YOUR-VARIABLES-FILE> --ask-vault-pass -K*
+[student@workstation workstation-vm]$ *ansible-playbook configure-workstation.yml -e @<YOUR-VARIABLES-FILE> --ask-vault-pass*
 ----
