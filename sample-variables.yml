@@ -1,14 +1,14 @@
 ---
 git:
   user:
-    name: YOUR-FULL-NAME
+    name: '"YOUR-FULL-NAME"'
     email: YOUR-EMAIL
   push:
     default: simple
   credentials:
     - url: https://github.com
       username: YOUR-GITHUB-USERNAME
-      helper: cache --timeout=28800
+      helper: '"cache --timeout=28800"'
   core:
     - key: autocrlf
       value: input

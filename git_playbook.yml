@@ -1,0 +1,9 @@
+---
+- name: Configure Git with the command module
+  hosts: workstation
+  tasks:
+    - name: Include Git task file
+      vars:
+        scope: global
+        git_vars_file: /tmp/git.yml
+      include_tasks: tasks/git.yml

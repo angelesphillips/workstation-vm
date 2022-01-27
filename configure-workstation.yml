@@ -2,6 +2,8 @@
 - name: Configure workstation VM
   hosts: localhost
   gather_facts: true
+  vars:
+    git_vars_file: /tmp/git.yml
   tasks:
     # This section is commented out because it isn't persistent.
     #- block:
@@ -70,16 +72,17 @@
         mode: 0644
         state: present
 
-    - name: Configure basic git settings
-      template:
-        src: templates/gitconfig.j2
-        dest: "{{ ansible_env['HOME'] }}/.gitconfig"
-
-    - name: Extract variables
+    - name: Extract Git variables
       template:
         src: templates/tmp-git.j2
-        dest: /tmp/git.yml
+        dest: "{{ git_vars_file }}"
       when: git is defined
+      tags: git
+
+    - name: Configure global Git settings
+      vars:
+        scope: global
+      include_tasks: tasks/git.yml
       tags: git
 
     - name: Add file to /etc/motd.d
