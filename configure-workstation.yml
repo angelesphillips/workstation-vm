@@ -324,7 +324,7 @@
           file:
             path: /etc/dconf/db/local.d/locks/00-default-wallpaper
             state: absent
-          when: ansible_facts['distribution_version'] == "8.4"
+          when: ansible_facts['distribution_version'] == "8.4" or ansible_facts['distribution_version'] == "8.5"
           register: background_fix
 
         - name: Update dconf
@@ -332,13 +332,20 @@
           command: dconf update
           when: background_fix['changed'] | bool == True
 
+        - name: Copy new background file
+          become: true
+          copy:
+            src: files/bw-900-700.png
+            dest: /usr/share/backgrounds/
+          when: background_fix['changed'] | bool == True
+
         # Commenting out for now. Something about the value is wrong.
-        #- name: Set new background
-        #  become: true
-        #  become_user: "{{ ansible_env['LOGNAME'] }}"
-        #  command: "gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/circles-dark.xml'"
+        - name: Set new background
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command: "gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/bw-900-700.png'"
         #  changed_when: false
         #  dconf:
         #    key: "/org/gnome/desktop/background/picture-uri"
-        #    value: "file:///usr/share/backgrounds/circles-dark.xml"
-        #  when: background_fix['changed'] | bool == True
+        #    value: "file:///usr/share/backgrounds/bw-900-700.png"
+          when: background_fix['changed'] | bool == True
