@@ -330,7 +330,7 @@
         - name: Update dconf
           become: true
           command: dconf update
-          when: background_fix['changed'] | bool == True
+          #when: background_fix['changed'] | bool == True
 
         - name: Copy new background file
           become: true
