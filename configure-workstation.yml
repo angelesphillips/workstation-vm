@@ -319,7 +319,7 @@
           #  key: "/org/gnome/shell/favorite-apps"
           #  value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
-        - name: Fix locked RHEL 8.4 background
+        - name: Fix locked background
           become: true
           file:
             path: /etc/dconf/db/local.d/locks/00-default-wallpaper
@@ -336,16 +336,24 @@
           become: true
           copy:
             src: files/bw-900-700.png
-            dest: /usr/share/backgrounds/
+            dest: /home/student/Pictures/bw-900-700.png
           when: background_fix['changed'] | bool == True
 
         # Commenting out for now. Something about the value is wrong.
         - name: Set new background
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
-          command: "gsettings set org.gnome.desktop.background picture-uri 'file:///usr/share/backgrounds/bw-900-700.png'"
+          command:
+            argv:
+              - gsettings
+              - set 
+              - org.gnome.desktop.background
+              - picture-uri
+              - 'file:///home/student/Pictures/bw-900-700.png'
+          changed_when: false
+        #  command: "gsettings set org.gnome.desktop.background picture-uri 'file:///home/student/Pictures/bw-900-700.png'"
         #  changed_when: false
         #  dconf:
         #    key: "/org/gnome/desktop/background/picture-uri"
-        #    value: "file:///usr/share/backgrounds/bw-900-700.png"
+        #    value: "file:///home/student/Pictures/bw-900-700.png"
           when: background_fix['changed'] | bool == True
