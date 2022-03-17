@@ -357,20 +357,3 @@
         #    key: "/org/gnome/desktop/background/picture-uri"
         #    value: "file:///home/student/Pictures/bw-900-700.png"
           when: background_fix['changed'] | bool == True
-
-        - name: Copy vale executable to ~/bin
-          become: true
-          become_user: "{{ ansible_env['LOGNAME'] }}"
-          copy:
-            src: files/vale_2.15.2
-            dest: "{{ ansible_env['HOME'] }}/bin/vale"
-            mode: '0775'
-          tags: vale
-
-        - name: Copy vale INI file
-          become: true
-          become_user: "{{ ansible_env['LOGNAME'] }}"
-          copy:
-            src: files/vale.ini
-            dest: "{{ ansible_env['HOME'] }}/.vale.ini"
-          tags: vale
