@@ -1,0 +1,1 @@
+* https://jenkins.prod.nextcle.com/userContent/curriculum-guidelines/index.html[GLS Guidelines]
