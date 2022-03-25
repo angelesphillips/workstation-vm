@@ -357,3 +357,27 @@
         #    key: "/org/gnome/desktop/background/picture-uri"
         #    value: "file:///home/student/Pictures/bw-900-700.png"
           when: background_fix['changed'] | bool == True
+
+        - name: Configure new keybindings for workspace switching (down)
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-down
+              - "['<Primary><Shift>Down']"
+          tags: workspaces
+
+        - name: Configure new keybindings for workspace switching (up)
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-up
+              - "['<Primary><Shift>Up']"
+          tags: workspaces
