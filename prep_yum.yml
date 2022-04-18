@@ -1,0 +1,22 @@
+---
+# This playbooks is needed in DO467 (as of 04/18/2022).
+# The next classroom build should eliminate the need to run this.
+- name: Prep system for yum
+  hosts: localhost
+  become: true
+  gather_facts: True
+  tasks:
+    - name: Download new repo files
+      get_url:
+        url: "http://materials.example.com/{{ item }}"
+        dest: /etc/yum.repos.d/
+        backup: true
+      loop:
+        - additional.repo
+        - rhel-dvd.repo
+
+    - name: Disable subscription-manager
+      lineinfile:
+        path: /etc/yum/pluginconf.d/subscription-manager.conf
+        line: "enabled = 0"
+        regexp: "^enabled.*="
