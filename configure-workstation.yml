@@ -231,7 +231,7 @@
           become: true
           dnf:
             name:
-              - gnome-tweaks
+              #- gnome-tweaks
               - python3-psutil
               - libcanberra-gtk2
               - gh
@@ -273,9 +273,9 @@
           command:
             argv:
               - gsettings
-              - set 
+              - set
               - org.gnome.shell
-              - enabled-extensions 
+              - enabled-extensions
               - "['window-list@gnome-shell-extensions.gcampax.github.com']"
           changed_when: false
           #dconf:
@@ -310,7 +310,7 @@
           command:
             argv:
               - gsettings
-              - set 
+              - set
               - org.gnome.shell
               - favorite-apps
               - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
@@ -346,7 +346,7 @@
           command:
             argv:
               - gsettings
-              - set 
+              - set
               - org.gnome.desktop.background
               - picture-uri
               - 'file:///home/student/Pictures/bw-900-700.png'
