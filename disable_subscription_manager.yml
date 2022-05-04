@@ -1,0 +1,11 @@
+---
+- name: Prep systems for yum
+  hosts: all,!classroom
+  become: true
+  gather_facts: True
+  tasks:
+    - name: Disable subscription-manager
+      lineinfile:
+        path: /etc/yum/pluginconf.d/subscription-manager.conf
+        line: "enabled = 0"
+        regexp: "^enabled.*="
