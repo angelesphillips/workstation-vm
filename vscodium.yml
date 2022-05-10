@@ -1,0 +1,37 @@
+---
+- name: Prep workstation for vscodium
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Import RHEL 8 GPG key
+      rpm_key:
+        key: https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-8
+        state: present
+
+    - name: Configure EPEL
+      dnf:
+        name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+        state: present
+
+    - name: Install snapd
+      dnf:
+        name: snapd
+        state: latest
+
+    - name: Start and enable snapd.socket
+      systemd:
+        name: snapd.socket
+        state: started
+        enabled: true
+
+    - name: Create a symbolic link for snap
+      file:
+        path: /snap
+        src: /var/lib/snapd/snap
+        state: link
+
+    - name: Install vscodium
+      command: snap install codium --classic
+      args:
+        creates: /snap/codium
+      changed_when: false
