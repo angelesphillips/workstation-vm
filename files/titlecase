@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+# Name: titlecase
+# Description: converts a given string to titlecase
+# License: GPL
+# Copyright (C) 2016  Morgan Weetman <mweetman@redhat.com>
+#
+#    This program is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+# Version: 20220401
+
+import select
+import sys
+import string
+import getopt
+
+## global variables ##
+keep_lower = ['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'into', 'nor', 'of', 'off', 'on', 'onto', 'or', 'out', 'over', 'so', 'the', 'to', 'up', 'with', 'yet']
+p_map = dict.fromkeys(map(ord, string.punctuation))
+
+
+## functions ##
+def usage():
+  print('Usage: %s OPTIONS' % argv[0])
+  print('\nOPTIONS:')
+  print(' [-i] (--ignore-file)    file containing words to ignore')
+  print(' [-h] (--help)           print this message')
+
+
+ignore_list = []
+titlecase_list = []
+
+
+def main():
+  global data
+  try:
+    opts, args = getopt.getopt(sys.argv[1:], "i:h", ["ignore-file=", "help"])
+  except getopt.GetoptError as err:
+    print(str(err))
+    usage()
+    return 1
+  for opt, arg in opts:
+    if opt in ("-i", "--ignore-file"):
+      ignore_file = arg
+    elif opt in ("-h", "--help"):
+      usage()
+      return 0
+    else:
+      assert False, '<*> unhandled option'
+      return 1
+
+  try:
+    ignore_file
+    ignore_file_handle = open(ignore_file, "r")
+    ignore_file_handle.read(ignore_list)
+    ignore_file_handle.close()
+  except:
+    pass
+
+  # read from stdin and fail back to argv[1] if empty
+  while sys.stdin in select.select([sys.stdin], [], [], 0)[0]:
+    line = sys.stdin.readline()
+    if line:
+      source_string = line
+      break
+    else:
+      exit(0)
+  else:
+    source_string = sys.argv[1]
+
+  source_string_list = source_string.split()
+
+  for index in range(len(source_string_list)):
+    # pass through words in ignore_list untouched (punctuation stripped before checking)
+    if source_string_list[index].translate(p_map) in ignore_list:
+      titlecase_list.append(source_string_list[index])
+    # capitalise first and last words always
+    elif index == 0 or index == len(source_string_list):
+      titlecase_list.append(source_string_list[index].lower().capitalize())
+    # convert to lower if we're in the keep_lower list (punctuation stripped before checking)
+    elif source_string_list[index].lower().translate(p_map) in keep_lower:
+      titlecase_list.append(source_string_list[index].lower())
+    # capitalise everything else
+    else:
+      titlecase_list.append(source_string_list[index].lower().capitalize())
+
+  print(' '.join(titlecase_list))
+
+
+if __name__ == "__main__":
+  rc = main()
+  exit(rc)
+
