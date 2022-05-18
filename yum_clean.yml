@@ -1,0 +1,10 @@
+---
+- name: Resolve temporary yum issues
+  hosts: all,!classroom
+  become: true
+  remote_user: devops
+  gather_facts: false
+  tasks:
+    - name: Run "yum clean all"
+      command: yum clean all
+      changed_when: false
