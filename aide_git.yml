@@ -1,0 +1,33 @@
+---
+- name: Install git and aide for troubleshooting
+  hosts:
+    - automation_controller_control_nodes
+    - automation_controller_exec_nodes
+    - automation_controller_hop_nodes
+  become: true
+  tasks:
+    - name: Install software
+      dnf:
+        name:
+          - git
+          - aide
+        state: latest
+
+    - name: Initialize /etc for git
+      command:
+        cmd: "{{ item }}"
+        chdir: /etc
+        warn: false
+      loop:
+        - "git init"
+        - "git add passwd group"
+        - "git commit -m 'Initial commit'"
+
+    - name: Run "aide --init"
+      command: "aide --init"
+
+    - name: Copy generated aide database
+      copy:
+        remote_src: true
+        src: /var/lib/aide/aide.db.new.gz
+        dest: /var/lib/aide/aide.db.gz
