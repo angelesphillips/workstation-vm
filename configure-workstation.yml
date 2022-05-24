@@ -324,7 +324,7 @@
           file:
             path: /etc/dconf/db/local.d/locks/00-default-wallpaper
             state: absent
-          when: ansible_facts['distribution_version'] == "8.4" or ansible_facts['distribution_version'] == "8.5"
+          when: ansible_facts['distribution_version'] == "8.4" or ansible_facts['distribution_version'] == "8.5" or ansible_facts['distribution_version'] == "8.6"
           register: background_fix
 
         - name: Update dconf
