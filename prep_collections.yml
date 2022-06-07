@@ -17,6 +17,15 @@
         line: "export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN='{{ automation_hub_token }}'"
       register: add_token
 
+    - name: Add RED_HAT_OFFLINE_TOKEN line
+      become: true
+      become_user: "{{ the_user }}"
+      lineinfile:
+        path: "~{{ the_user }}/.bashrc"
+        regexp: "^export RED_HAT_OFFLINE_TOKEN"
+        line: "export RED_HAT_OFFLINE_TOKEN='{{ red_hat_offline_token }}'"
+      register: add_token
+
     - name: Run 'source ~/.bashrc'
       debug:
         msg: 'Use new bashrc settings: source ~/.bashrc'
