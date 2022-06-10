@@ -1,0 +1,30 @@
+git clone https://github.com/angelesphillips/workstation-vm
+cd ~/workstation-vm/
+ansible-playbook site.yml -e @no-keys.yml --ask-vault-pass
+ansible-playbook prep_collections.yml --ask-vault-pass
+source ~/.bashrc
+cd
+ansible-vault view ~/workstation-vm/no-keys.yml
+mkdir ~/Curriculum
+cd ~/Curriculum
+git clone https://github.com/RedHatTraining/DO467
+cd ~/Curriculum/DO467/classroom/ansible-playbooks-novello/
+git checkout phillips/aap2.2-ch01s04
+ansible-galaxy collection install -r collections/requirements.yml -p collections/
+ansible-playbook dle.components.register_to_dle_sat.yml
+ansible-playbook 150_enable_satellite_repos.yml
+git checkout main
+cd ~/workstation-vm/
+ansible-playbook site.yml -e @no-keys.yml --ask-vault-pass
+cd
+git clone https://github.com/angelesphillips/flamel
+cd ~/flamel/rhel8.6/
+ansible-playbook configure-flamel-vault-https.yml --skip-tags sudo
+source ~/.bashrc
+cd ~/Curriculum/DO467/classroom/grading/src/do467/ansible/
+git checkout phillips/aap2.2-ch01s04
+ansible-galaxy collection install -r collections/requirements.yml -p collections/
+ansible-playbook install-installation/solve.yml
+sudo -i
+cd /home/student/aap2.2-bundle/
+time ./setup.sh -e ignore_preflight_errors=true
