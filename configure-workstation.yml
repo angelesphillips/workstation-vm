@@ -245,6 +245,11 @@
           #  value: "true"
 
         - name: Enable the gnome-tweaks extension that shows the window list
+          vars:
+            rhel_version:
+              - "8.4"
+              - "8.5"
+              - "8.6"
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
           command:
@@ -257,12 +262,15 @@
           changed_when: false
           when:
             - "ansible_facts['distribution'] == 'RedHat'"
-            - ansible_facts['distribution_version'] | float >= 8.4 and ansible_facts['distribution_version'] | float < 9.0
+            - ansible_facts['distribution_version'] in rhel_version
           #dconf:
           #  key: "/org/gnome/shell/enabled-extensions"
           #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
 
         - name: Enable the gnome-extensions extension that shows the window list
+          vars:
+            rhel_version:
+              - "9.0"
           become: true
           become_user: "{{ ansible_env['LOGNAME'] }}"
           command:
@@ -271,8 +279,9 @@
               - enable
               - window-list@gnome-shell-extensions.gcampax.github.com
           changed_when: false
+          when:
             - "ansible_facts['distribution'] == 'RedHat'"
-            - ansible_facts['distribution_version'] | float >= 9.0
+            - ansible_facts['distribution_version'] in rhel_version
           #dconf:
           #  key: "/org/gnome/shell/enabled-extensions"
           #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
