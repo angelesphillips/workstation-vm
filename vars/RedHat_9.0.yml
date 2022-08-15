@@ -1,0 +1,7 @@
+---
+additional_packages:
+  - gnome-tweaks
+  - gnome-extensions-app
+  - python3-psutil
+  - libcanberra-gtk2
+  - gh
