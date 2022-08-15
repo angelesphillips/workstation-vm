@@ -5,31 +5,12 @@
   vars:
     git_vars_file: /tmp/git.yml
   tasks:
-    # This section is commented out because it isn't persistent.
-    #- block:
-    #    - name: Query for monitor output name
-    #      shell: 'xrandr | grep "connected primary" | cut -d" " -f1'
-    #      register: xrandr_output
+    - name: Set distribution_version fact
+      set_fact:
+        distribution_version: "{{ ansible_facts['distribution'] }}_{{ ansible_facts['distribution_version'] }}"
 
-    #    - name: Show xrandr_output
-    #      debug:
-    #        var: xrandr_output['stdout']
-
-    #    - name: Change resolution (dryrun)
-    #      # The command fails if attempting to set to an unsupported resolution
-    #      command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }} --dryrun
-
-    #    - name: Change resolution
-    #      command: xrandr --output {{ xrandr_output['stdout'] }} --mode {{ resolution }}
-    #      register: change_resolution
-
-    #    - name: Update dconf
-    #      become: true
-    #      become_user: "{{ ansible_env['LOGNAME'] }}"
-    #      command: dconf update
-    #      when: change_resolution['changed'] | bool == True
-
-    #  when: resolution is defined
+    - name: Include the appropriate variables
+      include_vars: vars/{{ distribution_version }}.yml
 
     - name: Make Regular Directories
       file:
@@ -230,11 +211,7 @@
         - name: Install software
           become: true
           dnf:
-            name:
-              #- gnome-tweaks
-              - python3-psutil
-              - libcanberra-gtk2
-              - gh
+            name: "{{ additional_packages }}"
             state: latest
 
         - name: Check for GitHub completion file
@@ -278,6 +255,24 @@
               - enabled-extensions
               - "['window-list@gnome-shell-extensions.gcampax.github.com']"
           changed_when: false
+          when:
+            - "ansible_facts['distribution'] == 'RedHat'"
+            - ansible_facts['distribution_version'] | float >= 8.4 and ansible_facts['distribution_version'] | float < 9.0
+          #dconf:
+          #  key: "/org/gnome/shell/enabled-extensions"
+          #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+
+        - name: Enable the gnome-extensions extension that shows the window list
+          become: true
+          become_user: "{{ ansible_env['LOGNAME'] }}"
+          command:
+            argv:
+              - gnome-extensions
+              - enable
+              - window-list@gnome-shell-extensions.gcampax.github.com
+          changed_when: false
+            - "ansible_facts['distribution'] == 'RedHat'"
+            - ansible_facts['distribution_version'] | float >= 9.0
           #dconf:
           #  key: "/org/gnome/shell/enabled-extensions"
           #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
