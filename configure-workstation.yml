@@ -203,8 +203,9 @@
     - block:
         - name: Enable GitHub CLI repository
           become: true
-          copy:
-            src: files/gh-cli.repo
+          uri:
+            url: https://cli.github.com/packages/rpm/gh-cli.repo
+            return_content: true
             dest: /etc/yum.repos.d/gh-cli.repo
           tags: github
 
