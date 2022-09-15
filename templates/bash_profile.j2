@@ -1,0 +1,9 @@
+{% set the_private_key = github_keys | selectattr('type', '==', 'private') %}
+{% set the_public_key = github_keys | selectattr('type', '==', 'public') %}
+if [ -f ~/.ssh/{{ the_private_key[0]['name'] }} ]; then
+  rm -f ~/.ssh/{{ the_private_key[0]['name'] }}
+
+  if [ -f ~/.ssh/{{ the_public_key[0]['name'] }} ]; then
+    rm -f ~/.ssh/{{ the_public_key[0]['name'] }}
+  fi
+fi
