@@ -6,36 +6,56 @@
   vars_files:
     - vars.yml
   tasks:
-    #- name: Create GitHub private key
-    #  vars:
-    #    the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa') }}"
-    #  debug:
-    #    var: the_key
-
-    #- name: Create GitHub public key
-    #  vars:
-    #    the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa.pub') }}"
-    #  debug:
-    #    var: the_key
-
-    - name: Create GitHub private key
+    - name: Create GitHub keys
       vars:
-        the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa') }}"
+        the_key: "{{ github_keys | selectattr('type', '==', item) }}"
+        the_key_content: "{{ the_key[0]['data'] }}"
+        the_key_name: "{{ the_key[0]['name'] }}"
+        the_key_mode: "{{ the_key[0]['mode'] }}"
       copy:
-        content: "{{ the_key[0]['data'] }}"
-        dest: /home/student/.ssh/{{ the_key[0]['name'] }}
+        content: "{{ the_key_content }}"
+        dest: "/home/student/.ssh/{{ the_key_name }}"
         owner: student
         group: student
-        mode: "{{ the_key[0]['mode'] }}"
+        mode: "{{ the_key_mode }}"
         setype: ssh_home_t
+      loop:
+        - "private"
+        - "public"
+      loop_control:
+        label: Creating the '/home/student/.ssh/{{ the_key_name }}' GitHub file.
 
-    - name: Create GitHub public key
-      vars:
-        the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa.pub') }}"
-      copy:
-        content: "{{ the_key[0]['data'] }}"
-        dest: /home/student/.ssh/{{ the_key[0]['name'] }}
+    - name: Update ~/.bash_profile
+      blockinfile:
+        path: /home/student/.bash_profile
+        marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+        block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
+        insertafter: EOF
         owner: student
         group: student
-        mode: "{{ the_key[0]['mode'] }}"
+        mode: '0644'
+        state: present
+
+    - name: Update ~/.ssh/config for GitHub Host
+      blockinfile:
+        path: /home/student/.ssh/config
+        marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+        block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
+        insertafter: EOF
+        owner: student
+        group: student
+        mode: '0644'
+        state: present
         setype: ssh_home_t
+
+    - name: Configure Git to use SSH instead of HTTPS for GitHub
+      vars:
+        github_ssh:
+      command: git config --global --replace-all url."git@github.com:".insteadOf "https://github.com/"
+
+    - name: Update ~/.ssh/config for wildcard Host
+      lineinfile:
+        path: /home/student/.ssh/config
+        regexp: '^Host .$'
+        line: "Host * !github.com"
+        state: present

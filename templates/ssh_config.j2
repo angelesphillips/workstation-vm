@@ -1,0 +1,5 @@
+{% set the_private_key = github_keys | selectattr('type', '==', 'private') %}
+Host github.com
+  User git
+  IdentityFile ~/.ssh/{{ the_private_key[0]['name'] }}
+  StrictHostKeyChecking accept-new
