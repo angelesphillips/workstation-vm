@@ -1,0 +1,41 @@
+---
+- name: Prepare workstation for scaffolding
+  hosts: localhost
+  become: false
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    #- name: Create GitHub private key
+    #  vars:
+    #    the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa') }}"
+    #  debug:
+    #    var: the_key
+
+    #- name: Create GitHub public key
+    #  vars:
+    #    the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa.pub') }}"
+    #  debug:
+    #    var: the_key
+
+    - name: Create GitHub private key
+      vars:
+        the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa') }}"
+      copy:
+        content: "{{ the_key[0]['data'] }}"
+        dest: /home/student/.ssh/{{ the_key[0]['name'] }}
+        owner: student
+        group: student
+        mode: "{{ the_key[0]['mode'] }}"
+        setype: ssh_home_t
+
+    - name: Create GitHub public key
+      vars:
+        the_key: "{{ github_keys | selectattr('name', '==', 'github_rsa.pub') }}"
+      copy:
+        content: "{{ the_key[0]['data'] }}"
+        dest: /home/student/.ssh/{{ the_key[0]['name'] }}
+        owner: student
+        group: student
+        mode: "{{ the_key[0]['mode'] }}"
+        setype: ssh_home_t
