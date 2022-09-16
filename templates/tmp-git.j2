@@ -16,8 +16,10 @@ git:
 {% for the_credential in git['credentials'] %}
   - name: credential.{{ the_credential['url'] }}.username
     value: {{ the_credential['username'] }}
+{% if the_credential.helper is defined %}
   - name: credential.{{ the_credential['url'] }}.helper
     value: '{{ the_credential.helper }}'
+{% endif %}
 {% endfor %}
 {% endif %}
 {% if git['core'] is defined %}
