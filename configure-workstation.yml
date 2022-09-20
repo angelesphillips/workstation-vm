@@ -201,12 +201,19 @@
       #  ignore_errors: True
 
     - block:
+        - name: Check for GitHub CLI repository
+          stat:
+            path: /etc/yum.repos.d/gh-cli.repo
+          register: gh_cli
+          tags: github
+
         - name: Enable GitHub CLI repository
           become: true
           uri:
             url: https://cli.github.com/packages/rpm/gh-cli.repo
             return_content: true
             dest: /etc/yum.repos.d/gh-cli.repo
+          when: gh_cli['stat']['exists'] | bool == False
           tags: github
 
         - name: Install software
