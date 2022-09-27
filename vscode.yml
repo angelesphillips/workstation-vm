@@ -16,7 +16,11 @@
         owner: root
         group: root
         mode: '0644'
-        state: present
+
+    - name: Install Visual Studio Code
+      ansible.builtin.dnf:
+        name: code
+        state: latest
 
     - name: Query favorites
       become: true
@@ -49,9 +53,11 @@
 - name: Add Visual Studio Code extensions
   hosts: workstation
   become: true
+  vars:
+    vscode_users:
+      - username: student
+        visual_studio_code_extensions:
+          - redhat.ansible
   roles:
     - role: gantsign.visual-studio-code-extensions
-      users:
-        - username: student
-          visual_studio_code_extensions:
-            - redhat.ansible
+      users: "{{ vscode_users }}"
