@@ -4,6 +4,19 @@
   become: true
   gather_facts: false
   tasks:
+    - name: Check for graphical.target
+      ansible.builtin.command: systemctl get-default
+      changed_when: false
+      register: systemctl_default
+
+    - name: Must use graphical.target
+      vars:
+        the_target: "{{ systemctl_default['stdout_lines'][0] }}"
+      assert:
+        that: the_target == 'graphical.target'
+        success_msg: "SUCCESS: System defaults to: {{ the_target }}"
+        fail_msg: "FAIL: System defaults to: {{ the_target }}"
+
     - name: Import the Visual Studio Code RPM key
       ansible.builtin.rpm_key:
         key: https://packages.microsoft.com/keys/microsoft.asc
@@ -50,16 +63,14 @@
           - "{{ updated_favorites }}"
       when: "'code.desktop' not in current_favorites['stdout_lines'][0]"
 
-- name: Add Visual Studio Code extensions
-  hosts: workstation
-  become: true
-  vars:
-    vscode_users:
-      - username: student
-        visual_studio_code_extensions:
-          - redhat.ansible
-          - errata-ai.vale-server
-          - asciidoctor.asciidoctor-vscode
-  roles:
-    - role: gantsign.visual-studio-code-extensions
-      users: "{{ vscode_users }}"
+    - name: Add Visual Studio Code extensions
+      ansible.builtin.include_role:
+        name: gantsign.visual-studio-code-extensions
+      vars:
+        vscode_users:
+          - username: student
+            visual_studio_code_extensions:
+              - redhat.ansible
+              - errata-ai.vale-server
+              - asciidoctor.asciidoctor-vscode
+        users: "{{ vscode_users }}"
