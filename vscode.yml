@@ -1,0 +1,57 @@
+---
+- name: Install Visual Studio Code on workstation
+  hosts: workstation
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Import the Visual Studio Code RPM key
+      ansible.builtin.rpm_key:
+        key: https://packages.microsoft.com/keys/microsoft.asc
+        state: present
+
+    - name: Create /etc/yum.repos.d/vscode.repo
+      ansible.builtin.copy:
+        src: files/vscode.repo
+        dest: /etc/yum.repos.d/vscode.repo
+        owner: root
+        group: root
+        mode: '0644'
+        state: present
+
+    - name: Query favorites
+      become: true
+      become_user: student
+      ansible.builtin.command:
+        argv:
+          - gsettings
+          - get
+          - org.gnome.shell
+          - favorite-apps
+      changed_when: false
+      register: current_favorites
+
+    - name: Add Visual Studio Code to favorites
+      vars:
+        search_pattern: "']"
+        replace_pattern: "', 'code.desktop']"
+        updated_favorites: "{{ current_favorites['stdout_lines'][0] | regex_replace(search_pattern, replace_pattern) }}"
+      become: true
+      become_user: student
+      ansible.builtin.command:
+        argv:
+          - gsettings
+          - set
+          - org.gnome.shell
+          - favorite-apps
+          - "{{ updated_favorites }}"
+      when: "'code.desktop' not in current_favorites['stdout_lines'][0]"
+
+- name: Add Visual Studio Code extensions
+  hosts: workstation
+  become: true
+  roles:
+    - role: gantsign.visual-studio-code-extensions
+      users:
+        - username: student
+          visual_studio_code_extensions:
+            - redhat.ansible
