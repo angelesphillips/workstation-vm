@@ -1,4 +1,3 @@
 ---
 - import_playbook: configure-workstation.yml
 - import_playbook: prep_collections.yml
-- import_playbook: vscode.yml
