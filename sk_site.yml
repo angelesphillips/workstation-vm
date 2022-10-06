@@ -1,4 +1,8 @@
 ---
+# Requires running:
+# ansible-galaxy role install -r roles/requirements.yml -p roles/
+# ansible-playbook sk_site.yml -e @vars.yml --ask-vault-pass
 - import_playbook: configure-workstation.yml
 - import_playbook: prep_collections.yml
 - import_playbook: sk.yml
+- import_playbook: vscode.yml
