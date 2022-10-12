@@ -36,15 +36,32 @@
         mode: '0644'
         state: present
 
-    - name: Update ~/.ssh/config for GitHub Host
-      blockinfile:
+    - name: Create /home/student/.ssh/config.d
+      file:
+        path: /home/student/.ssh/config.d
+        owner: student
+        group: student
+        mode: '0775'
+        state: directory
+
+    - name: Add 'include' line to /home/student/.ssh/config
+      lineinfile:
         path: /home/student/.ssh/config
+        regexp: '^[Ii]nclude'
+        line: 'include ~/.ssh/config.d/*.conf'
+        insertbefore: BOF
+        state: present
+
+    - name: Update SSH configuration for GitHub Host
+      blockinfile:
+        path: /home/student/.ssh/config.d/github.conf
         marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
         block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
         insertafter: EOF
         owner: student
         group: student
         mode: '0644'
+        create: true
         state: present
         setype: ssh_home_t
 
