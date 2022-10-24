@@ -2,7 +2,7 @@
 - name: Prepare workstation for scaffolding
   hosts: localhost
   become: false
-  gather_facts: false
+  gather_facts: true
   vars_files:
     - vars.yml
   tasks:
@@ -14,39 +14,39 @@
         the_key_mode: "{{ the_key[0]['mode'] }}"
       copy:
         content: "{{ the_key_content }}"
-        dest: "/home/student/.ssh/{{ the_key_name }}"
-        owner: student
-        group: student
+        dest: "{{ ansible_env['HOME'] }}/.ssh/{{ the_key_name }}"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: "{{ the_key_mode }}"
         setype: ssh_home_t
       loop:
         - "private"
         - "public"
       loop_control:
-        label: Creating the '/home/student/.ssh/{{ the_key_name }}' GitHub file.
+        label: Creating the '{{ ansible_env["HOME"] }}/.ssh/{{ the_key_name }}' GitHub file.
 
     - name: Update ~/.bash_profile
       blockinfile:
-        path: /home/student/.bash_profile
+        path: "{{ ansible_env['HOME'] }}/.bash_profile"
         marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
         block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
         insertafter: EOF
-        owner: student
-        group: student
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: '0644'
         state: present
 
-    - name: Create /home/student/.ssh/config.d
+    - name: Create {{ ansible_env['HOME'] }}/.ssh/config.d
       file:
-        path: /home/student/.ssh/config.d
-        owner: student
-        group: student
+        path: "{{ ansible_env['HOME'] }}/.ssh/config.d"
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: '0775'
         state: directory
 
-    - name: Add 'include' line to /home/student/.ssh/config
+    - name: Add 'include' line to {{ ansible_env['HOME'] }}/.ssh/config
       lineinfile:
-        path: /home/student/.ssh/config
+        path: "{{ ansible_env['HOME'] }}/.ssh/config"
         regexp: '^[Ii]nclude'
         line: 'include ~/.ssh/config.d/*.conf'
         insertbefore: BOF
@@ -54,12 +54,12 @@
 
     - name: Update SSH configuration for GitHub Host
       blockinfile:
-        path: /home/student/.ssh/config.d/github.conf
+        path: "{{ ansible_env['HOME'] }}/.ssh/config.d/github.conf"
         marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
         block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
         insertafter: EOF
-        owner: student
-        group: student
+        owner: "{{ ansible_env['LOGNAME'] }}"
+        group: "{{ ansible_env['LOGNAME'] }}"
         mode: '0644'
         create: true
         state: present
@@ -72,7 +72,7 @@
 
     - name: Update ~/.ssh/config for wildcard Host
       lineinfile:
-        path: /home/student/.ssh/config
+        path: "{{ ansible_env['HOME'] }}/.ssh/config"
         regexp: '^Host .$'
         line: "Host * !github.com"
         state: present
