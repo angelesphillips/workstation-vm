@@ -1,0 +1,25 @@
+function mykeys {
+  tmp_vault_pass_file=/tmp/.vault_pass
+  WORKSTATION_VM_DIR="${1}"
+  if [ -z "${WORKSTATION_VM_DIR}" ]
+  then
+    WORKSTATION_VM_DIR={{ ansible_env['HOME'] }}/workstation-vm
+  fi
+
+  if [ -d "${WORKSTATION_VM_DIR}" ]
+  then
+    echo -n "Vault password: "
+    read -sr vault_pass
+    echo "${vault_pass}" > ${tmp_vault_pass_file}
+    if pushd ${WORKSTATION_VM_DIR} &> /dev/null
+    then
+      echo
+      ansible-playbook ${WORKSTATION_VM_DIR}/sk.yml -e @vars.yml --vault-pass-file ${tmp_vault_pass_file}
+      popd &> /dev/null
+    fi
+    rm -f ${tmp_vault_pass_file}
+  else
+    echo "The '${WORKSTATION_VM_DIR}' directory does not exist." 1>&2
+  fi
+}
+

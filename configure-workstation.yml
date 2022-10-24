@@ -129,32 +129,48 @@
         - github_keys is defined
         - git_config.stat.exists
 
-    - name: Add block to {{ ansible_env['HOME'] }}/.ssh/config
-      blockinfile:
-        path: "{{ ansible_env['HOME'] }}/.ssh/config"
-        owner: "{{ ansible_env['LOGNAME'] }}"
-        group: "{{ ansible_env['LOGNAME'] }}"
-        mode: 0644
-        state: present
-        create: true
-        insertafter: EOF
-        marker_begin: BEGIN GITHUB
-        block: |
-          Host github.com
-            User git
-            IdentityFile ~/.ssh/{{ item['name'] }}
-            StrictHostKeyChecking accept-new
-      when:
-        - github_keys is defined
-        - item['type'] == "private"
-      loop: "{{ github_keys }}"
-      loop_control:
-        label: Adding github block to {{ ansible_env['HOME'] }}/.ssh/config
+    - name: Configure SSH for GITHUB
+      block:
+        - name: Create {{ ansible_env['HOME'] }}/.ssh/config.d
+          file:
+            path: "{{ ansible_env['HOME'] }}/.ssh/config.d"
+            owner: "{{ ansible_env['LOGNAME'] }}"
+            group: "{{ ansible_env['LOGNAME'] }}"
+            mode: '0775'
+            state: directory
 
-    # Customize vim, nano, and gedit to use:
-    # - tabs instead of spaces
-    # - tabs = 2 spaces
-    # - auto indent
+        - name: Add 'include' line to {{ ansible_env['HOME'] }}/.ssh/config
+          lineinfile:
+            path: "{{ ansible_env['HOME'] }}/.ssh/config"
+            regexp: '^[Ii]nclude'
+            line: 'include ~/.ssh/config.d/*.conf'
+            insertbefore: BOF
+            state: present
+
+        - name: Update SSH configuration for GitHub Host
+          blockinfile:
+            path: "{{ ansible_env['HOME'] }}/.ssh/config.d/github.conf"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
+            insertafter: EOF
+            owner: "{{ ansible_env['LOGNAME'] }}"
+            group: "{{ ansible_env['LOGNAME'] }}"
+            mode: '0644'
+            create: true
+            state: present
+            setype: ssh_home_t
+
+        - name: Configure 'mykeys' function
+          blockinfile:
+            path: "{{ ansible_env['HOME'] }}/.bashrc"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK MYKEYS FUNCTION"
+            block: "{{ lookup('template', 'templates/mykeys.j2') }}"
+            owner: "{{ ansible_env['LOGNAME'] }}"
+            group: "{{ ansible_env['LOGNAME'] }}"
+            mode: '0644'
+            state: present
+      when: github_keys is defined
+
     - name: Customize .vimrc
       become: true
       become_user: student
@@ -163,42 +179,6 @@
         dest: "~student/.vimrc"
       tags: editors
       ignore_errors: True
-
-      #- name: Customize .nanorc
-      #  become: true
-      #  become_user: "{{ item }}"
-      #  copy:
-      #    src: files/nanorc
-      #    dest: "~{{ item }}/.nanorc"
-      #  loop:
-      #    - root
-      #    - "{{ ansible_env['LOGNAME'] }}"
-      #  tags: editors
-      #  ignore_errors: True
-
-      #- name: Configure gedit settings
-      #  become: true
-      #  become_user: "{{ item[0] }}"
-      #  vars:
-      #    gedit_prefs:
-      #      - key: /org/gnome/gedit/preferences/editor/insert-spaces
-      #        value: "true"
-      #      - key: /org/gnome/gedit/preferences/editor/tabs-size
-      #        value: "uint32 2"
-      #      - key: /org/gnome/gedit/preferences/editor/auto-indent
-      #        value: "true"
-      #    users:
-      #      - "{{ ansible_env['LOGNAME'] }}"
-      #  dconf:
-      #    key: "{{ item[1]['key'] }}"
-      #    value: "{{ item[1]['value'] }}"
-      #  with_nested:
-      #    - "{{ users }}"
-      #    - "{{ gedit_prefs }}"
-      #  loop_control:
-      #    label: Configuring {{ item[1]['key'] }} for {{ item[0] }}.
-      #  tags: editors
-      #  ignore_errors: True
 
     - block:
         - name: Check for GitHub CLI repository
