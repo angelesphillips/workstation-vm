@@ -305,7 +305,7 @@
               - set
               - org.gnome.shell
               - favorite-apps
-              - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
+              - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop', 'code.desktop']"
           changed_when: false
           #dconf:
           #  key: "/org/gnome/shell/favorite-apps"
