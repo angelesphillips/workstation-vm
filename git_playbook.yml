@@ -1,9 +1,46 @@
 ---
 - name: Configure Git with the command module
   hosts: workstation
+  become: true
+  become_user: '{{ the_user }}'
+  gather_facts: false
+  vars:
+    git_vars: "{{ ansible_config_file | regex_replace('/ansible.cfg') }}/vars/git.yml"
   tasks:
-    - name: Include Git task file
-      vars:
-        scope: global
-        git_vars_file: /tmp/git.yml
-      include_tasks: tasks/git.yml
+    - name: Check for '{{ git_vars }}'
+      ansible.builtin.stat:
+        path: '{{ git_vars }}'
+      register: git_vars_file
+
+    - name: Generate the '{{ git_vars }}' file block
+      block:
+        - name: Include variables from vaulted file
+          ansible.builtin.include_vars:
+            file: vars.yml
+
+        - name: Create the '{{ git_vars }}' file
+          become: true
+          become_user: "{{ the_user }}"
+          ansible.builtin.copy:
+            content: |
+              ---
+              {{ git | from_yaml | to_nice_yaml(indent=2) }}
+            dest: "{{ git_vars }}"
+      when: git_vars_file['stat']['exists'] | bool == false
+
+    - name: Include generated '{{ git_vars }}' file
+      ansible.builtin.include_vars:
+        file: "{{ git_vars }}"
+        name: my_git_vars
+
+    - name: Show my_git_vars
+      ansible.builtin.debug:
+        var: my_git_vars
+
+    #- name: Include Git task file
+    #  become: true
+    #  become_user: "{{ the_user }}"
+    #  vars:
+    #    scope: global
+    #    git_vars_file: /tmp/git.yml
+    #  ansible.builtin.include_tasks: tasks/git.yml
