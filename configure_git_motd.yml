@@ -1,0 +1,122 @@
+---
+- name: Configure Git
+  hosts: workstation
+  become: true
+  become_user: student
+  vars_files:
+    - vars.yml
+  vars:
+    git_scope: global
+    the_git_fullname: >-
+      {{ git_config | selectattr('setting', '==', 'user.name') |
+      map(attribute='value') | first }}
+    the_git_username: >-
+      {{ git_config | selectattr('setting', '==', 'user.email') |
+      map(attribute='value') | first | split('@') | first }}
+    git_personal_config: /home/student/.gitconfig-{{ the_git_username }}
+  tasks:
+    - name: Fail if git_scope does not have a value of 'global' or 'local'
+      ansible.builtin.assert:
+        that:
+          - git_scope is defined
+          - (git_scope | lower == "global") or (git_scope | lower == "local")
+        success_msg: >-
+          The 'git_scope' variable is defined with a value of
+          '{{ git_scope }}'.
+        fail_msg: >-
+          The 'git_scope' variable must be defined with a value of either
+          'global' or 'local'.
+
+    - name: Global Git settings block
+      block:
+        - name: Copy {{ git_personal_config }} to /home/student/.gitconfig
+          ansible.builtin.copy:
+            src: "{{ git_personal_config }}"
+            dest: /home/student/.gitconfig
+            owner: student
+            group: student
+            mode: '0664'
+
+      rescue:
+        - name: Configure Git user.name
+          ansible.builtin.command: >-
+            git config --{{ git_scope }} --replace-all
+            {{ item['setting'] }} "{{ item['value'] }}"
+          loop: "{{ git_config }}"
+          loop_control:
+            label: Configuring the '{{ item["setting"] }}' setting.
+          when: item['setting'] == 'user.name'
+
+        - name: Configure Git settings
+          ansible.builtin.command: >-
+            git config --{{ git_scope }} --replace-all
+            {{ item['setting'] }} {{ item['value'] }}
+          loop: "{{ git_config }}"
+          loop_control:
+            label: Configuring the '{{ item["setting"] }}' setting.
+          when: item['setting'] != 'user.name'
+
+        - name: Copy /home/student/.gitconfig to {{ git_personal_config }}
+          ansible.builtin.copy:
+            src: /home/student/.gitconfig
+            dest: "{{ git_personal_config }}"
+            owner: student
+            group: student
+            mode: '0444'
+      when: git_scope | lower == "global"
+
+    - name: Local Git settings block
+      block:
+        - name: Check {{ repo }}/.git
+          ansible.builtin.stat:
+            path: "{{ repo }}/.git"
+          register: repo_git
+
+        - name: Fail if {{ repo }}/.git does not exist
+          ansible.builtin.assert:
+            that: repo_git['stat']['exists'] | bool == true
+            success_msg: The '{{ repo }}' directory contains a Git repository.
+            fail_msg: >-
+              The '{{ repo }}' directory does not contain a Git repository.
+
+        - name: Configure Git user.name
+          ansible.builtin.command: >-
+            git config --{{ git_scope }} --replace-all
+            {{ item['setting'] }} "{{ item['value'] }}"
+          args:
+            chdir: "{{ repo }}"
+          loop: "{{ git_config }}"
+          loop_control:
+            label: Configuring the '{{ item["setting"] }}' setting.
+          when: item['setting'] == 'user.name'
+
+        - name: Configure Git settings
+          ansible.builtin.command: >-
+            git config --{{ git_scope }} --replace-all
+            {{ item['setting'] }} {{ item['value'] }}
+          args:
+            chdir: "{{ repo }}"
+          loop: "{{ git_config }}"
+          loop_control:
+            label: Configuring the '{{ item["setting"] }}' setting.
+          when: item['setting'] != 'user.name'
+      when:
+        - git_scope | lower == "local"
+        - repo is defined
+
+    - name: Add file to /etc/motd.d
+      become: true
+      become_user: root
+      vars:
+        width: 78
+        message: This system is being used by {{ the_git_fullname }}!
+        left_pad: "{{ (width - (message | length)) // 2 }}"
+        right_pad: "{{ left_pad | int + ((width - (message | length)) % 2) }}"
+        msg_start: "=={% for x in range((left_pad | int) - 1) %} {% endfor %}"
+        msg_end: "{% for y in range((right_pad | int) - 1) %} {% endfor %}=="
+        formatted_msg: "{{ msg_start }}{{ message }}{{ msg_end }}"
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd.d/{{ the_git_username }}
+      when: git_config is defined
+      tags: motd
