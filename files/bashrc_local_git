@@ -1,17 +1,23 @@
 function local-git {
   REPO="${1}"
+  TMP_VAULT_PASS_FILE=/tmp/.vault_pass
+  WORKSTATION_VM_DIR=/home/student/workstation-vm
   if [ -z "${REPO}" ]
   then
     REPO="${PWD}"
   fi
   if [ -d "${REPO}/.git" ]
   then
-    if [ -f /home/student/workstation-vm/git_playbook.yml ]
+    echo -n "Vault password: "
+    read -sr vault_pass
+    echo "${vault_pass}" > ${TMP_VAULT_PASS_FILE}
+    if pushd ${WORKSTATION_VM_DIR} &> /dev/null
     then
-      ansible-playbook /home/student/workstation-vm/git_playbook.yml -i /home/student/workstation-vm/inventory -e scope=local -e repo=${REPO}
-    else
-      echo "ERROR: Playbook /home/student/workstation-vm/git_playbook.yml does not exist." 1>&2
+      echo
+      ansible-playbook configure_git_motd.yml -e @vars.yml -e git_scope=local -e repo=${REPO} --skip-tags motd --vault-pass-file ${TMP_VAULT_PASS_FILE}
+      popd &> /dev/null
     fi
+    rm -f ${TMP_VAULT_PASS_FILE}
   else
     echo "ERROR: ${REPO} is not a git repository." 1>&2
   fi
