@@ -1,1 +1,1 @@
-workstation
+workstation ansible_become_password=student

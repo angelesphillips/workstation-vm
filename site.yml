@@ -1,4 +1,8 @@
 ---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook site.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run site.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
 - import_playbook: sk.yml
 - import_playbook: configure-workstation.yml
 - import_playbook: prep_collections.yml
