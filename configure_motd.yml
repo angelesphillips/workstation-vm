@@ -1,0 +1,34 @@
+---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook configure_motd.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run configure_motd.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
+- name: Configure MOTD
+  hosts: workstation
+  become: true
+  vars_files:
+    - vars.yml
+  vars:
+    the_git_fullname: >-
+      {{ git_config | selectattr('setting', '==', 'user.name') |
+      map(attribute='value') | first }}
+    the_git_username: >-
+      {{ git_config | selectattr('setting', '==', 'user.email') |
+      map(attribute='value') | first | split('@') | first }}
+  tasks:
+    - name: Add file to /etc/motd.d
+      become: true
+      become_user: root
+      vars:
+        width: 78
+        message: This system is being used by {{ the_git_fullname }}!
+        left_pad: "{{ (width - (message | length)) // 2 }}"
+        right_pad: "{{ left_pad | int + ((width - (message | length)) % 2) }}"
+        msg_start: "=={% for x in range((left_pad | int) - 1) %} {% endfor %}"
+        msg_end: "{% for y in range((right_pad | int) - 1) %} {% endfor %}=="
+        formatted_msg: "{{ msg_start }}{{ message }}{{ msg_end }}"
+      ansible.builtin.template:
+        src: templates/motd.j2
+        dest: /etc/motd.d/{{ the_git_username }}
+      when: git_config is defined
+      tags: motd

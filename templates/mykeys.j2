@@ -8,7 +8,7 @@ function mykeys {
   if pushd ${WORKSTATION_VM_DIR} &> /dev/null
   then
     echo
-    ansible-playbook configure_git_motd.yml --skip-tags motd --vault-pass-file ${TMP_VAULT_PASS_FILE}
+    ansible-playbook sk.yml --skip-tags motd --vault-pass-file ${TMP_VAULT_PASS_FILE}
     popd &> /dev/null
   fi
   rm -f ${TMP_VAULT_PASS_FILE}
