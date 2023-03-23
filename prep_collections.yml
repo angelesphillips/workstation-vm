@@ -1,32 +1,58 @@
 ---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook prep_collections.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run prep_collections.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
 - name: Add Automation Hub Token to ~/.bashrc
-  hosts: localhost
-  become: false
+  hosts: workstation
+  become: true
   gather_facts: false
   vars:
     the_user: student
   vars_files:
     - automation_hub_token.yml
   tasks:
+    - name: Fail if automation_hub_token is not defined
+      ansible.builtin.assert:
+        that: automation_hub_token is defined
+        success_msg: The 'automation_hub_token' variable is defined.
+        fail_msg: >-
+          The 'automation_hub_token' variable must be defined. Generate your
+          token at https://console.redhat.com/ansible/automation-hub/token
+
+    - name: Fail if red_hat_offline_token is not defined
+      ansible.builtin.assert:
+        that: red_hat_offline_token is defined
+        success_msg: The 'red_hat_offline_token' variable is defined.
+        fail_msg: >-
+          The 'red_hat_offline_token' variable must be defined. Generate your
+          offline token at https://access.redhat.com/management/api
+
     - name: Add automation hub token line
       become: true
       become_user: "{{ the_user }}"
-      lineinfile:
-        path: "~{{ the_user }}/.bashrc"
+      ansible.builtin.lineinfile:
+        path: ~{{ the_user }}/.bashrc
         regexp: "^export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN"
         line: "export ANSIBLE_GALAXY_SERVER_AUTOMATION_HUB_TOKEN='{{ automation_hub_token }}'"
+        owner: "{{ the_user }}"
+        group: "{{ the_user }}"
+        mode: "0644"
       register: add_token
 
     - name: Add RED_HAT_OFFLINE_TOKEN line
       become: true
       become_user: "{{ the_user }}"
-      lineinfile:
-        path: "~{{ the_user }}/.bashrc"
+      ansible.builtin.lineinfile:
+        path: ~{{ the_user }}/.bashrc
         regexp: "^export RED_HAT_OFFLINE_TOKEN"
         line: "export RED_HAT_OFFLINE_TOKEN='{{ red_hat_offline_token }}'"
-      register: add_token
+        owner: "{{ the_user }}"
+        group: "{{ the_user }}"
+        mode: "0644"
+      register: add_offline_token
 
     - name: Run 'source ~/.bashrc'
-      debug:
+      ansible.builtin.debug:
         msg: 'Use new bashrc settings: source ~/.bashrc'
-      when: add_token['changed'] | bool == True
+      when: (add_token['changed'] | bool == true) or (add_offline_token['changed'] | bool == true)
