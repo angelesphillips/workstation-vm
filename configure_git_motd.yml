@@ -2,10 +2,10 @@
 - name: Configure Git
   hosts: workstation
   become: true
-  become_user: student
   vars_files:
     - vars.yml
   vars:
+    the_user: student
     git_scope: global
     the_git_fullname: >-
       {{ git_config | selectattr('setting', '==', 'user.name') |
@@ -13,7 +13,7 @@
     the_git_username: >-
       {{ git_config | selectattr('setting', '==', 'user.email') |
       map(attribute='value') | first | split('@') | first }}
-    git_personal_config: /home/student/.gitconfig-{{ the_git_username }}
+    git_personal_config: ~{{ the_user }}/.gitconfig-{{ the_git_username }}
   tasks:
     - name: Fail if git_scope does not have a value of 'global' or 'local'
       ansible.builtin.assert:
@@ -26,16 +26,18 @@
         fail_msg: >-
           The 'git_scope' variable must be defined with a value of either
           'global' or 'local'.
+      tags: git
 
     - name: Global Git settings block
       block:
-        - name: Copy {{ git_personal_config }} to /home/student/.gitconfig
+        - name: Copy {{ git_personal_config }} to ~{{ the_user }}/.gitconfig
           ansible.builtin.copy:
             src: "{{ git_personal_config }}"
-            dest: /home/student/.gitconfig
-            owner: student
-            group: student
+            dest: ~{{ the_user }}/.gitconfig
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
             mode: '0664'
+            remote_src: true
 
       rescue:
         - name: Configure Git user.name
@@ -56,14 +58,16 @@
             label: Configuring the '{{ item["setting"] }}' setting.
           when: item['setting'] != 'user.name'
 
-        - name: Copy /home/student/.gitconfig to {{ git_personal_config }}
+        - name: Copy ~{{ the_user }}/.gitconfig to {{ git_personal_config }}
           ansible.builtin.copy:
-            src: /home/student/.gitconfig
+            src: ~{{ the_user }}/.gitconfig
             dest: "{{ git_personal_config }}"
-            owner: student
-            group: student
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
             mode: '0444'
+            remote_src: true
       when: git_scope | lower == "global"
+      tags: git
 
     - name: Local Git settings block
       block:
@@ -103,6 +107,7 @@
       when:
         - git_scope | lower == "local"
         - repo is defined
+      tags: git
 
     - name: Add file to /etc/motd.d
       become: true

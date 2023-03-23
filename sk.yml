@@ -1,78 +1,81 @@
 ---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook sk.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run sk.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
 - name: Prepare workstation for scaffolding
-  hosts: localhost
-  become: false
-  gather_facts: true
+  hosts: workstation
+  become: true
+  gather_facts: false
+  vars:
+    the_user: student
   vars_files:
     - vars.yml
   tasks:
-    - name: Create GitHub keys
-      vars:
-        the_key: "{{ github_keys | selectattr('type', '==', item) }}"
-        the_key_content: "{{ the_key[0]['data'] }}"
-        the_key_name: "{{ the_key[0]['name'] }}"
-        the_key_mode: "{{ the_key[0]['mode'] }}"
-      copy:
-        content: "{{ the_key_content }}"
-        dest: "{{ ansible_env['HOME'] }}/.ssh/{{ the_key_name }}"
-        owner: "{{ ansible_env['LOGNAME'] }}"
-        group: "{{ ansible_env['LOGNAME'] }}"
-        mode: "{{ the_key_mode }}"
-        setype: ssh_home_t
-      loop:
-        - "private"
-        - "public"
-      loop_control:
-        label: Creating the '{{ ansible_env["HOME"] }}/.ssh/{{ the_key_name }}' GitHub file.
+    - name: Git block
+      block:
+        - name: Create GitHub keys
+          ansible.builtin.copy:
+            content: "{{ item['data'] }}"
+            dest: ~{{ the_user }}/.ssh/{{ item['name'] }}
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: "{{ item['mode'] }}"
+            setype: ssh_home_t
+          loop: "{{ github_keys }}"
+          loop_control:
+            label: Creating the '~{{ the_user }}/.ssh/{{ item["name"] }}' file.
 
-    - name: Update ~/.bash_profile
-      blockinfile:
-        path: "{{ ansible_env['HOME'] }}/.bash_profile"
-        marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
-        block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
-        insertafter: EOF
-        owner: "{{ ansible_env['LOGNAME'] }}"
-        group: "{{ ansible_env['LOGNAME'] }}"
-        mode: '0644'
-        state: present
+        - name: Update ~/.bash_profile
+          ansible.builtin.blockinfile:
+            path: ~{{ the_user }}/.bash_profile
+            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
+            insertafter: EOF
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: '0644'
+            state: present
 
-    - name: Create {{ ansible_env['HOME'] }}/.ssh/config.d
-      file:
-        path: "{{ ansible_env['HOME'] }}/.ssh/config.d"
-        owner: "{{ ansible_env['LOGNAME'] }}"
-        group: "{{ ansible_env['LOGNAME'] }}"
-        mode: '0775'
-        state: directory
+        - name: Create ~{{ the_user }}/.ssh/config.d
+          ansible.builtin.file:
+            path: ~{{ the_user }}/.ssh/config.d
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: '0775'
+            state: directory
 
-    - name: Add 'include' line to {{ ansible_env['HOME'] }}/.ssh/config
-      lineinfile:
-        path: "{{ ansible_env['HOME'] }}/.ssh/config"
-        regexp: '^[Ii]nclude'
-        line: 'include ~/.ssh/config.d/*.conf'
-        insertbefore: BOF
-        state: present
+        - name: Add 'include' line to ~{{ the_user }}/.ssh/config
+          ansible.builtin.lineinfile:
+            path: ~{{ the_user }}/.ssh/config
+            regexp: '^[Ii]nclude'
+            line: 'include ~/.ssh/config.d/*.conf'
+            insertbefore: BOF
+            state: present
 
-    - name: Update SSH configuration for GitHub Host
-      blockinfile:
-        path: "{{ ansible_env['HOME'] }}/.ssh/config.d/github.conf"
-        marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
-        block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
-        insertafter: EOF
-        owner: "{{ ansible_env['LOGNAME'] }}"
-        group: "{{ ansible_env['LOGNAME'] }}"
-        mode: '0644'
-        create: true
-        state: present
-        setype: ssh_home_t
+        - name: Update SSH configuration for GitHub Host
+          ansible.builtin.blockinfile:
+            path: ~{{ the_user }}/.ssh/config.d/github.conf
+            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
+            insertafter: EOF
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: '0644'
+            create: true
+            state: present
+            setype: ssh_home_t
 
-    - name: Configure Git to use SSH instead of HTTPS for GitHub
-      vars:
-        github_ssh:
-      command: git config --global --replace-all url."git@github.com:".insteadOf "https://github.com/"
+        - name: Update ~/.ssh/config for wildcard Host
+          ansible.builtin.lineinfile:
+            path: ~{{ the_user }}/.ssh/config
+            regexp: '^Host .$'
+            line: "Host * !github.com"
+            state: present
+      tags: git
 
-    - name: Update ~/.ssh/config for wildcard Host
-      lineinfile:
-        path: "{{ ansible_env['HOME'] }}/.ssh/config"
-        regexp: '^Host .$'
-        line: "Host * !github.com"
-        state: present
+- name: Configure Git and MOTD
+  vars:
+    git_scope: global
+  ansible.builtin.import_playbook: configure_git_motd.yml
+

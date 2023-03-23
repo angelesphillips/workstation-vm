@@ -3,4 +3,3 @@ additional_packages:
   - gnome-tweaks
   - python3-psutil
   - libcanberra-gtk2
-  - gh
