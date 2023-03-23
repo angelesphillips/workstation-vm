@@ -18,17 +18,6 @@
     - name: Collect package facts
       ansible.builtin.package_facts:
 
-    #- name: Build new_package_facts
-    #  vars:
-    #    new_package_facts: |
-    #      {% for PACKAGE in additional_packages -%}
-    #        {% if PACKAGE not in ansible_facts['packages'] -%}
-    #          - {{ PACKAGE }}
-    #        {%- endif %}
-    #      {%- endfor %}
-    #  ansible.builtin.debug:
-    #    var: new_package_facts | from_yaml
-
     - name: Install additional_packages
       ansible.builtin.dnf:
         name: "{{ additional_packages }}"

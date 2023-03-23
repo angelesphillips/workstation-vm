@@ -74,8 +74,8 @@
             state: present
       tags: git
 
-- name: Configure Git and MOTD
+- name: Configure Git
   vars:
     git_scope: global
-  ansible.builtin.import_playbook: configure_git_motd.yml
+  ansible.builtin.import_playbook: configure_git.yml
 
