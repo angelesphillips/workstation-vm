@@ -302,16 +302,22 @@
       #  value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
     - name: Fix locked background
+      vars:
+        affected_versions:
+          - "8.4"
+          - "8.5"
+          - "8.6"
+          - "9.0"
+          - "9.1"
       ansible.builtin.file:
         path: /etc/dconf/db/local.d/locks/00-default-wallpaper
         state: absent
-      when: ansible_facts['distribution_version'] == "8.4" or ansible_facts['distribution_version'] == "8.5" or ansible_facts['distribution_version'] == "8.6"
+      when: ansible_facts['distribution_version'] in affected_versions
       register: background_fix
 
     - name: Update dconf
       become: true
       ansible.builtin.command: dconf update
-      #when: background_fix['changed'] | bool == true
 
     - name: Copy new background file
       ansible.builtin.copy:
@@ -320,7 +326,28 @@
         owner: "{{ the_user }}"
         group: "{{ the_user }}"
         mode: "0664"
-      when: background_fix['changed'] | bool == true
+
+    - name: Set background primary-color
+      become: true
+      become_user: "{{ the_user }}"
+      ansible.builtin.command:
+        argv:
+          - gsettings
+          - set
+          - org.gnome.desktop.background
+          - primary-color
+          - "'#000000000000'"
+
+    - name: Set background picture-options
+      become: true
+      become_user: "{{ the_user }}"
+      ansible.builtin.command:
+        argv:
+          - gsettings
+          - set
+          - org.gnome.desktop.background
+          - picture-options
+          - "zoom"
 
     # Commenting out for now. Something about the value is wrong.
     - name: Set new background
@@ -339,9 +366,8 @@
     #  dconf:
     #    key: "/org/gnome/desktop/background/picture-uri"
     #    value: "file:///home/student/Pictures/bw-900-700.png"
-      when: background_fix['changed'] | bool == true
 
-    - name: Configure new keybindings for workspace switching (down)
+    - name: Use 'control-shift-down' to move down workspaces
       become: true
       become_user: "{{ the_user }}"
       ansible.builtin.command:
@@ -353,7 +379,7 @@
           - "['<Primary><Shift>Down']"
       tags: workspaces
 
-    - name: Configure new keybindings for workspace switching (up)
+    - name: Use 'control-shift-up' to move up workspaces
       become: true
       become_user: "{{ the_user }}"
       ansible.builtin.command:
