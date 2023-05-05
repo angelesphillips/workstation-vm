@@ -349,7 +349,6 @@
           - picture-options
           - "zoom"
 
-    # Commenting out for now. Something about the value is wrong.
     - name: Set new background
       become: true
       become_user: "{{ the_user }}"
@@ -361,32 +360,44 @@
           - picture-uri
           - "file:///home/{{ the_user }}/Pictures/bw-900-700.png"
       changed_when: false
-    #  command: "gsettings set org.gnome.desktop.background picture-uri 'file:///home/student/Pictures/bw-900-700.png'"
-    #  changed_when: false
-    #  dconf:
-    #    key: "/org/gnome/desktop/background/picture-uri"
-    #    value: "file:///home/student/Pictures/bw-900-700.png"
 
-    - name: Use 'control-shift-down' to move down workspaces
+    - name: Workspaces block
       become: true
       become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.desktop.wm.keybindings
-          - switch-to-workspace-down
-          - "['<Primary><Shift>Down']"
       tags: workspaces
+      block:
+        - name: Use 'control-shift-down' to move down workspaces
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-down
+              - "['<Primary><Shift>Down']"
 
-    - name: Use 'control-shift-up' to move up workspaces
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.desktop.wm.keybindings
-          - switch-to-workspace-up
-          - "['<Primary><Shift>Up']"
-      tags: workspaces
+        - name: Use 'control-shift-up' to move up workspaces
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-up
+              - "['<Primary><Shift>Up']"
+
+        - name: Use 'control-shift-left' to move to workspace left
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-left
+              - "['<Primary><Shift>Left']"
+
+        - name: Use 'control-shift-right' to move to workspace right
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.wm.keybindings
+              - switch-to-workspace-right
+              - "['<Primary><Shift>Right']"
