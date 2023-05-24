@@ -7,3 +7,4 @@
 - import_playbook: configure-workstation.yml
 - import_playbook: prep_collections.yml
 - import_playbook: configure_motd.yml
+- import_playbook: registry_auth.yml

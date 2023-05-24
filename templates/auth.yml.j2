@@ -1,0 +1,5 @@
+auths:
+{% for registry in registries %}
+  {{ registry['name'] }}:
+    auth: "{{ registry['u_p'] | b64encode }}"
+{% endfor %}
