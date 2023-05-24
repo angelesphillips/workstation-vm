@@ -6,12 +6,20 @@
   gather_facts: false
   vars_files:
     - vault.yml
+  vars:
+    gui_user: student
   tasks:
+    - name: Install software
+      become: true
+      become_user: root
+      ansible.builtin.dnf:
+        name:
+          - podman
+        state: latest
+
     - name: User ID block
       become: true
       become_user: root
-      vars:
-        gui_user: student
       block:
         - name: Check {{ gui_user }} ID number
           ansible.builtin.command: id -u {{ gui_user }}
@@ -43,7 +51,7 @@
         setype: user_tmp_t
 
     - name: Pull container images
-      ansible.bulitin.command: podman pull {{ item }}
+      ansible.builtin.command: podman pull {{ item }}
       loop:
         - quay.io/redhattraining/flamel
         - quay.io/redhattraining/sk
