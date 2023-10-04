@@ -1,0 +1,20 @@
+---
+- name: Fix issues with temporary repository file
+  hosts: workstation
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Update temporary repo file permissions
+      ansible.builtin.file:
+        path: "{{ item }}"
+        mode: '0644'
+      with_fileglob:
+        - /etc/yum.repos.d/automation-platform*.repo
+
+    - name: Enable temporary repository
+      ansible.builtin.lineinfile:
+        path: "{{ item }}"
+        regexp: '^enabled='
+        line: "enabled=1"
+      with_fileglob:
+        - /etc/yum.repos.d/automation-platform*.repo
