@@ -55,4 +55,5 @@
       loop:
         - quay.io/redhattraining/flamel
         - quay.io/redhattraining/sk
-        - quay.io/angelesphillips/aspell
+        - quay.io/angelesphillips/spellr
+        #- quay.io/angelesphillips/aspell
