@@ -56,4 +56,8 @@
         - quay.io/redhattraining/flamel
         - quay.io/redhattraining/sk
         - quay.io/angelesphillips/spellr
-        #- quay.io/angelesphillips/aspell
+
+    - name: Remove auth.json
+      ansible.builtin.file:
+        path: /run/user/{{ user_id['stdout'] }}/containers/auth.json
+        state: absent
