@@ -1,3 +1,4 @@
+# Remove personal SSH keys on a new login
 {% set the_private_key = github_keys | selectattr('type', '==', 'private') %}
 {% set the_public_key = github_keys | selectattr('type', '==', 'public') %}
 if [ -f ~/.ssh/{{ the_private_key[0]['name'] }} ]; then
@@ -5,5 +6,38 @@ if [ -f ~/.ssh/{{ the_private_key[0]['name'] }} ]; then
 
   if [ -f ~/.ssh/{{ the_public_key[0]['name'] }} ]; then
     rm -f ~/.ssh/{{ the_public_key[0]['name'] }}
+  fi
+fi
+
+# Display WARNING for new SSH connection
+CURRENT_GNOME_SESSIONS=$(pgrep -u student gnome-session)
+if [ -n "${CURRENT_GNOME_SESSIONS}" ]
+then
+  CURRENT_REMOTE_CONNECTIONS="$(w --no-header --from | grep -v '^student[[:blank:]]\+:[[:digit:]]')"
+  if [ -n "${CURRENT_REMOTE_CONNECTIONS}" ]
+  then
+    ACTIVE_TERMINALS=$(ps -ef | grep " pts/" | awk '{print $6}' | sort -u)
+    REMOTE_USER="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $1}')"
+    REMOTE_TERMINAL="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $2}')"
+    REMOTE_IP="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $3}')"
+WARNING_MESSAGE="$(cat <<-END
+===============================================================================
+The ${REMOTE_USER} user has connected to the ${REMOTE_TERMINAL} terminal from ${REMOTE_IP}.
+
+You can terminate this connection using the following command:
+$ sudo pkill -KILL -t ${REMOTE_TERMINAL}
+===============================================================================
+END
+)"
+    OLD_DISPLAY=":X"
+    for GNOME_PID in ${CURRENT_GNOME_SESSIONS}
+    do
+      NEW_DISPLAY="$(grep --binary-files=text -o 'DISPLAY=:[[:digit:]]\+' /proc/${GNOME_PID}/environ | sed -e 's/DISPLAY=//')"
+      if [ ${NEW_DISPLAY} != ${OLD_DISPLAY} ]
+      then
+        DISPLAY=${NEW_DISPLAY} zenity --warning --title "WARNING: New SSH connection detected" --text "${WARNING_MESSAGE}"
+        OLD_DISPLAY=${NEW_DISPLAY}
+      fi
+    done
   fi
 fi
