@@ -29,7 +29,7 @@
         - name: Update ~/.bash_profile
           ansible.builtin.blockinfile:
             path: ~{{ the_user }}/.bash_profile
-            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK SECURITY"
             block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
             insertafter: EOF
             owner: "{{ the_user }}"
