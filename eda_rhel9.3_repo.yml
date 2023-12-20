@@ -1,0 +1,18 @@
+---
+# ansible-playbook -i eda-inventory eda_rhel9.3_repo.yml
+- name: Copy DVD repo file to machines
+  hosts:
+    - workstation
+    - controller
+    - hub
+    - eda-controller
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Copy dvd-rhel9.3.repo to /etc/yum.repos.d/
+      ansible.builtin.copy:
+        src: dvd-rhel9.3.repo
+        dest: /etc/yum.repos.d/dvd-rhel9.3.repo
+        owner: root
+        group: root
+        mode: '0644'
