@@ -5,7 +5,7 @@
     - workstation
     - controller
     - hub
-    - eda-controller
+      #- eda-controller
   become: true
   gather_facts: false
   tasks:
