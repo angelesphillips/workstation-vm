@@ -1,0 +1,9 @@
+[eda_env]
+workstation
+hub
+controller
+eda-controller
+
+[eda_env:vars]
+ansible_user=student
+ansible_become_password=student
