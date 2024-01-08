@@ -1,5 +1,19 @@
 ---
 # ansible-playbook -i eda-inventory eda_rhel9.3_repo.yml
+- name: Query for rhel_dvd.repo content
+  hosts: eda-controller
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Slurp /etc/yum.repos.d/rhel_dvd.repo
+      ansible.builtin.slurp:
+        path: /etc/yum.repos.d/rhel_dvd.repo
+      register: slurped_file
+
+    - name: Set slurped_content
+      ansible.builtin.set_fact:
+        slurped_content: "{{ slurped_file['content'] | b64decode }}"
+
 - name: Copy DVD repo file to machines
   hosts:
     - workstation
@@ -11,8 +25,8 @@
   tasks:
     - name: Copy dvd-rhel9.3.repo to /etc/yum.repos.d/
       ansible.builtin.copy:
-        src: dvd-rhel9.3.repo
-        dest: /etc/yum.repos.d/dvd-rhel9.3.repo
+        content: "{{ hostvars['eda-controller']['slurped_content'] }}"
+        dest: /etc/yum.repos.d/rhel_dvd.repo
         owner: root
         group: root
         mode: '0644'
