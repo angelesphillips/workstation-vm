@@ -7,6 +7,7 @@ gpgcheck=1
 
 [AppStream]
 name=RHEL 9.3 AppStream
+description=RHEL 9.3 AppStream RPMs
 baseurl=http://content.example.com/rhel9.3/x86_64/dvd/AppStream/
 enalbed=1
 gpgcheck=1
