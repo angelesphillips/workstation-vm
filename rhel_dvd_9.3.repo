@@ -1,0 +1,12 @@
+[BaseOS]
+name=RHEL 9.3 BaseOS
+description=RHEL 9.3 BaseOS RPMs
+baseurl=http://content.example.com/rhel9.3/x86_64/dvd/BaseOS/
+enabled=1
+gpgcheck=1
+
+[AppStream]
+name=RHEL 9.3 AppStream
+baseurl=http://content.example.com/rhel9.3/x86_64/dvd/AppStream/
+enalbed=1
+gpgcheck=1
