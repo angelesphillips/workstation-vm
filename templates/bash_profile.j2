@@ -13,7 +13,7 @@ fi
 CURRENT_GNOME_SESSIONS=$(pgrep -u student gnome-session)
 if [ -n "${CURRENT_GNOME_SESSIONS}" ]
 then
-  CURRENT_REMOTE_CONNECTIONS="$(w --no-header --from | grep -v -e '^student[[:blank:]]\+:[[:digit:]]') -e '^student[[:blank:]]\+seat0'"
+  CURRENT_REMOTE_CONNECTIONS="$(w --no-header --from | grep -v -e '^student[[:blank:]]\+:[[:digit:]]' -e '^student[[:blank:]]\+seat0')"
   if [ -n "${CURRENT_REMOTE_CONNECTIONS}" ]
   then
     ACTIVE_TERMINALS=$(ps -ef | grep " pts/" | awk '{print $6}' | sort -u)
