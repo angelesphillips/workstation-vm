@@ -1,4 +1,6 @@
 alias font-default="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 11'"
+alias font-12="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 12'"
+alias font-13="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 13'"
 alias font-14="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 14'"
 alias font-15="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 15'"
 alias font-16="gsettings set org.gnome.desktop.interface monospace-font-name 'Monospace 16'"
