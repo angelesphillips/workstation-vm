@@ -151,43 +151,43 @@
       tags: editors
       ignore_errors: true
 
-    - name: GitHub CLI block
-      block:
-        - name: Check for GitHub CLI repository
-          ansible.builtin.stat:
-            path: /etc/yum.repos.d/gh-cli.repo
-          register: gh_cli
-          tags: github
-
-        - name: Enable GitHub CLI repository
-          ansible.builtin.uri:
-            url: https://cli.github.com/packages/rpm/gh-cli.repo
-            return_content: true
-            dest: /etc/yum.repos.d/gh-cli.repo
-          when: gh_cli['stat']['exists'] | bool == false
-          tags: github
-
-        - name: Install gh software
-          ansible.builtin.dnf:
-            name: gh
-            state: latest
-
-        - name: Check for GitHub completion file
-          ansible.builtin.stat:
-            path: /etc/bash_completion.d/gh-cli
-          register: gh_cli_completion
-          tags: github
-
-        - name: Generate GitHub CLI completion
-          ansible.builtin.shell: gh completion -s bash > /etc/bash_completion.d/gh-cli
-          when: gh_cli_completion['stat']['exists'] | bool == false
-          tags: github
-
-        - name: Disable GitHub CLI repository
-          ansible.builtin.yum_repository:
-            name: gh-cli
-            state: absent
-      when: "'gh' not in ansible_facts['packages']"
+#    - name: GitHub CLI block
+#      block:
+#        - name: Check for GitHub CLI repository
+#          ansible.builtin.stat:
+#            path: /etc/yum.repos.d/gh-cli.repo
+#          register: gh_cli
+#          tags: github
+#
+#        - name: Enable GitHub CLI repository
+#          ansible.builtin.uri:
+#            url: https://cli.github.com/packages/rpm/gh-cli.repo
+#            return_content: true
+#            dest: /etc/yum.repos.d/gh-cli.repo
+#          when: gh_cli['stat']['exists'] | bool == false
+#          tags: github
+#
+#        - name: Install gh software
+#          ansible.builtin.dnf:
+#            name: gh
+#            state: latest
+#
+#        - name: Check for GitHub completion file
+#          ansible.builtin.stat:
+#            path: /etc/bash_completion.d/gh-cli
+#          register: gh_cli_completion
+#          tags: github
+#
+#        - name: Generate GitHub CLI completion
+#          ansible.builtin.shell: gh completion -s bash > /etc/bash_completion.d/gh-cli
+#          when: gh_cli_completion['stat']['exists'] | bool == false
+#          tags: github
+#
+#        - name: Disable GitHub CLI repository
+#          ansible.builtin.yum_repository:
+#            name: gh-cli
+#            state: absent
+#      when: "'gh' not in ansible_facts['packages']"
 
     - name: Use 12-hour clock format instead of 24-hour
       become: true
