@@ -10,7 +10,9 @@
   tasks:
     - name: Set distribution_version fact
       ansible.builtin.set_fact:
-        distribution_version: "{{ ansible_facts['distribution'] }}_{{ ansible_facts['distribution_version'] }}"
+        distribution_version: >-
+          {{ ansible_facts['distribution'] }}_{{
+          ansible_facts['distribution_version'] }}
 
     - name: Include the appropriate variables
       ansible.builtin.include_vars: vars/{{ distribution_version }}.yml
@@ -21,7 +23,7 @@
     - name: Install additional_packages
       ansible.builtin.dnf:
         name: "{{ additional_packages }}"
-        state: latest
+        state: present
 
     - name: Make Regular Directories
       ansible.builtin.file:
@@ -192,7 +194,8 @@
     - name: Use 12-hour clock format instead of 24-hour
       become: true
       become_user: "{{ the_user }}"
-      ansible.builtin.command: "gsettings set org.gnome.desktop.interface clock-format '12h'"
+      ansible.builtin.command: >-
+        gsettings set org.gnome.desktop.interface clock-format '12h'
       changed_when: false
       #dconf:
       #  key: "/org/gnome/desktop/interface/clock-format"
@@ -201,7 +204,8 @@
     - name: Display seconds in the top-bar clock
       become: true
       become_user: "{{ the_user }}"
-      ansible.builtin.command: "gsettings set org.gnome.desktop.interface clock-show-seconds true"
+      ansible.builtin.command: >-
+        gsettings set org.gnome.desktop.interface clock-show-seconds true
       changed_when: false
       #dconf:
       #  key: "/org/gnome/desktop/interface/clock-show-seconds"
@@ -261,7 +265,8 @@
       vars:
         line_delimiter: "\n"
       ansible.builtin.set_fact:
-        rht_content: "{{ slurp_rht['content'] | b64decode | split(line_delimiter) }}"
+        rht_content: >-
+          {{ slurp_rht['content'] | b64decode | split(line_delimiter) }}
 
     - name: Set venue fact
       vars:
@@ -278,7 +283,8 @@
     - name: Turn off keyboard repeats
       become: true
       become_user: "{{ the_user }}"
-      ansible.builtin.command: "gsettings set org.gnome.desktop.peripherals.keyboard repeat false"
+      ansible.builtin.command: >-
+        gsettings set org.gnome.desktop.peripherals.keyboard repeat false
       changed_when: false
       #dconf:
       #  key: "/org/gnome/desktop/peripherals/keyboard/repeat"
