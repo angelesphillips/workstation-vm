@@ -35,7 +35,7 @@ END
       NEW_DISPLAY="$(grep --binary-files=text -o 'DISPLAY=:[[:digit:]]\+' /proc/${GNOME_PID}/environ | sed -e 's/DISPLAY=//')"
       if [ ${NEW_DISPLAY} != ${OLD_DISPLAY} ]
       then
-        DISPLAY=${NEW_DISPLAY} zenity --warning --title "WARNING: New SSH connection detected" --text "${WARNING_MESSAGE}"
+        DISPLAY=${NEW_DISPLAY} zenity --info --timeout 10 --title "WARNING: New SSH connection detected" --text "${WARNING_MESSAGE}"
         OLD_DISPLAY=${NEW_DISPLAY}
       fi
     done
