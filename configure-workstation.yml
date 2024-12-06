@@ -241,6 +241,7 @@
           - "9.1"
           - "9.2"
           - "9.3"
+          - "9.4"
       become: true
       become_user: "{{ the_user }}"
       ansible.builtin.command:
