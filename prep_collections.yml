@@ -40,6 +40,16 @@
         mode: "0644"
       register: add_token
 
+    - name: Prevent token from expiring
+      ansible.builtin.command:
+        cmd: >
+          curl https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+          -d grant_type=refresh_token
+          -d client_id="cloud-services"
+          -d refresh_token="{{ automation_hub_token }}"
+          --fail --silent --show-error --output /dev/null
+      no_log: true
+
     - name: Add RED_HAT_OFFLINE_TOKEN line
       become: true
       become_user: "{{ the_user }}"
