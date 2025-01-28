@@ -1,2 +1,13 @@
 localhost ansible_connection=local ansible_become_password=student
 workstation ansible_connection=local ansible_become_password=student
+
+[server_VMs]
+servera
+serverb
+serverc
+serverd
+servere
+serverf
+
+[server_VMs:vars]
+ansible_become_password=student
