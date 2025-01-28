@@ -1,0 +1,29 @@
+---
+- name: Install git and aide for troubleshooting
+  hosts: "{{ the_hosts | default('null,') }}"
+  become: true
+  tasks:
+    - name: Install software
+      ansible.builtin.dnf:
+        name:
+          - aide
+        state: present
+
+    - name: Copy /etc/passwd and /etc/group
+      ansible.builtin.copy:
+        src: "{{ item }}"
+        dest: /root/{{ item | basename }}
+        remote_src: true
+      loop:
+        - /etc/group
+        - /etc/passwd
+
+    - name: >-
+        Run command: aide --init
+      ansible.builtin.command: aide --init
+
+    - name: Copy generated aide database
+      ansible.builtin.copy:
+        src: /var/lib/aide/aide.db.new.gz
+        dest: /var/lib/aide/aide.db.gz
+        remote_src: true
