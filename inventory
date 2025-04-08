@@ -1,5 +1,6 @@
 localhost ansible_connection=local ansible_become_password=student
 workstation ansible_connection=local ansible_become_password=student
+utility ansible_become_password=student
 
 [server_VMs]
 servera
