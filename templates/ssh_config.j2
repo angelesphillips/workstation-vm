@@ -3,3 +3,12 @@ Host github.com
   User git
   IdentityFile ~/.ssh/{{ the_private_key[0]['name'] }}
   StrictHostKeyChecking accept-new
+
+Host tools-na100bastion
+   Hostname bastion-tools-na100.dev.ole.redhat.com
+   User cloud-user
+   IdentityFile ~/.ssh/ocp-tools-na100
+   IdentitiesOnly yes
+   PreferredAuthentications publickey
+   StrictHostKeyChecking no
+   UpdateHostKeys yes
