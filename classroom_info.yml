@@ -1,0 +1,59 @@
+---
+- name: Collect and display classroom information
+  hosts: all,!localhost
+  become: true
+  gather_facts: true
+  vars:
+    colon: ":"
+    space: " "
+    GB: " GB"
+  tasks:
+    - name: Display facts
+      ansible.builtin.debug:
+        var: ansible_facts['devices']
+
+    #- name: Display ansible_facts['processor_count']
+    #  ansible.builtin.debug:
+    #    var: ansible_facts['processor_count']
+
+    - name: Query for memory information
+      ansible.builtin.command: dmidecode -t memory
+      changed_when: false
+      register: query_memory
+
+    - name: Set actual_memory
+      when: found_lines | length == 1
+      vars:
+        mem_regex: >-
+          ^\tMaximum Capacity:.*$
+        found_lines: >-
+          {{ query_memory['stdout'] |
+          regex_findall(mem_regex, multiline=true) }}
+        actual_memory_gb: >-
+          {{ found_lines[0] | split(colon) | last | trim }}
+      ansible.builtin.set_fact:
+        actual_memory: >-
+          {{ actual_memory_gb | regex_replace(GB) }}
+
+    - name: Set device_items
+      ansible.builtin.set_fact:
+        device_items: "{{ ansible_facts['devices'] | dict2items }}"
+
+    - name: Set hard_disks
+      ansible.builtin.set_fact:
+        hard_disks: >-
+          {{ device_items | selectattr('value.model', '==', 'QEMU HARDDISK') }}
+
+    - name: Print device_and_size
+      ansible.builtin.debug:
+        msg: >-
+          {{ item['key'] }}:{{ item['value']['size'] | regex_replace(GB) | int }}
+      loop: "{{ hard_disks }}"
+      loop_control:
+        label: Displaying hard disk information
+
+    - name: Print summary
+      ansible.builtin.debug:
+        msg: >-
+          {{ ansible_facts['hostname'] }}:{{ actual_memory }}:{{
+          ansible_facts['processor_count'] }}
