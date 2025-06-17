@@ -62,3 +62,8 @@
       ansible.builtin.file:
         path: /run/user/{{ user_id['stdout'] }}/containers/auth.json
         state: absent
+
+    - name: Keep automation hub API token current
+      ansible.builtin.command:
+        cmd: curl https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token -d grant_type=refresh_token -d client_id="cloud-services" -d refresh_token="eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICI0NzQzYTkzMC03YmJiLTRkZGQtOTgzMS00ODcxNGRlZDc0YjUifQ.eyJpYXQiOjE3NTAxOTgwMDUsImp0aSI6Ijk4Njg5ODNjLTY4OWUtNDgyMi1iMGY5LWVmNGFiMGMxZTZkOSIsImlzcyI6Imh0dHBzOi8vc3NvLnJlZGhhdC5jb20vYXV0aC9yZWFsbXMvcmVkaGF0LWV4dGVybmFsIiwiYXVkIjoiaHR0cHM6Ly9zc28ucmVkaGF0LmNvbS9hdXRoL3JlYWxtcy9yZWRoYXQtZXh0ZXJuYWwiLCJzdWIiOiI1MjY0NDMwNyIsInR5cCI6Ik9mZmxpbmUiLCJhenAiOiJjbG91ZC1zZXJ2aWNlcyIsIm5vbmNlIjoiOTliY2E0NDItODQ5ZC00N2ViLWI3NjgtMDIxYWZiM2IxNzNjIiwic2lkIjoiNDMwYWMzYjQtZjIxMi00NWEwLTljNWQtZGRjNmZkNjMwZDk3Iiwic2NvcGUiOiJvcGVuaWQgYXBpLmNvbnNvbGUgYmFzaWMgYXBpLmlhbS5zZXJ2aWNlX2FjY291bnRzIHJvbGVzIHdlYi1vcmlnaW5zIGNsaWVudF90eXBlLnByZV9rYzI1IG9mZmxpbmVfYWNjZXNzIn0.9nHkLIy5etgC2Qhc4TxeYdCdwz8IUALan7NPN8PWkBxlAV-RwmSS_tdWla97AHvtI_as1X1UaLuGG1Bpjr04Eg" --fail --silent --show-error --output /dev/null
+      changed_when: false
