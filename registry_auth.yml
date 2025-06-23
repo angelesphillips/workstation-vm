@@ -1,0 +1,64 @@
+---
+- name: Download container tools
+  hosts: workstation
+  become: true
+  become_user: student
+  gather_facts: false
+  vars_files:
+    - vault.yml
+  vars:
+    gui_user: student
+  tasks:
+    - name: Install software
+      become: true
+      become_user: root
+      ansible.builtin.dnf:
+        name:
+          - podman
+        state: latest
+
+    - name: User ID block
+      become: true
+      become_user: root
+      block:
+        - name: Check {{ gui_user }} ID number
+          ansible.builtin.command: id -u {{ gui_user }}
+          changed_when: false
+          register: user_id
+
+      rescue:
+        - name: Fail if {{ gui_user }} not found
+          ansible.builtin.assert:
+            that: user_id['failed'] | bool == false
+            fail_msg: User '{{ gui_user }}' must exist on the system.
+
+    - name: Create /run/user/{{ user_id['stdout'] }}/containers
+      ansible.builtin.file:
+        path: /run/user/{{ user_id['stdout'] }}/containers
+        state: directory
+        owner: "{{ gui_user }}"
+        group: "{{ gui_user }}"
+        mode: '0700'
+        setype: user_tmp_t
+
+    - name: Create auth.json
+      ansible.builtin.copy:
+        content: "{{ lookup('template', 'templates/auth.yml.j2') | from_yaml | to_nice_json }}"
+        dest: /run/user/{{ user_id['stdout'] }}/containers/auth.json
+        owner: "{{ gui_user }}"
+        group: "{{ gui_user }}"
+        mode: '0600'
+        setype: user_tmp_t
+
+    - name: Pull container images
+      ansible.builtin.command: podman pull {{ item }}
+      loop:
+        - quay.io/redhattraining/flamel
+        - quay.io/redhattraining/sk
+        #- quay.io/redhattraining/sk-full
+        - quay.io/angelesphillips/spellr
+
+    - name: Remove auth.json
+      ansible.builtin.file:
+        path: /run/user/{{ user_id['stdout'] }}/containers/auth.json
+        state: absent
