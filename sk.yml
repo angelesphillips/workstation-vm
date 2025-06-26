@@ -69,14 +69,14 @@
         - name: Update SSH configuration for classroom
           ansible.builtin.copy:
             content: |
-              Hostname classroom
-              User instructor
-              Port 22022
-              UserKnownHostsFile /dev/null
-              StrictHostKeyChecking no
-              IdentityFile ~{{ the_user }}/.ssh/instructor_key
-              LogLevel ERROR
-              PreferredAuthentications publickey
+              Host classroom
+                User instructor
+                Port 22022
+                UserKnownHostsFile /dev/null
+                StrictHostKeyChecking no
+                IdentityFile ~{{ the_user }}/.ssh/instructor_key
+                LogLevel ERROR
+                PreferredAuthentications publickey
             dest: ~{{ the_user }}/.ssh/config.d/classroom.conf
             owner: "{{ the_user }}"
             group: "{{ the_user }}"
