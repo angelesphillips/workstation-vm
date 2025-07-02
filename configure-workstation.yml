@@ -66,7 +66,21 @@
         mode: "0644"
         state: present
 
+    # Do this for RHEL 8 & RHEL 9
     - name: Modify .bashrc to change PS1 prompt for git
+      when:
+        - "ansible_facts['distribution'] == 'RedHat'"
+        - ansible_facts['distribution_version'] in rhel_version
+      vars:
+        rhel_version:
+          - "8.4"
+          - "8.5"
+          - "8.6"
+          - "9.0"
+          - "9.1"
+          - "9.2"
+          - "9.3"
+          - "9.4"
       ansible.builtin.blockinfile:
         path: ~{{ the_user }}/.bashrc
         marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
@@ -75,6 +89,24 @@
         mode: "0644"
         state: present
         block: "{{ lookup('file', 'files/bashrc_git') }}"
+      tags: ps1
+
+    # Do this for RHEL 10
+    - name: Modify .bashrc to change PS1 prompt for git
+      when:
+        - "ansible_facts['distribution'] == 'RedHat'"
+        - ansible_facts['distribution_version'] in rhel_version
+      vars:
+        rhel_version:
+          - "10.0"
+      ansible.builtin.blockinfile:
+        path: ~{{ the_user }}/.bashrc
+        marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
+        owner: "{{ the_user }}"
+        group: "{{ the_user }}"
+        mode: "0644"
+        state: present
+        block: "{{ lookup('file', 'files/bashrc_git_rhel10') }}"
       tags: ps1
 
     - name: Modify .bashrc to add the local-git function

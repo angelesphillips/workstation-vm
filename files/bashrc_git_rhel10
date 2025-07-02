@@ -1,0 +1,23 @@
+# Git Prompt Configuration
+if [ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]; then
+    . /usr/share/git-core/contrib/completion/git-prompt.sh
+
+    # Optional: Customize what __git_ps1 shows
+    # GIT_PS1_SHOWDIRTYSTATE=true       # Show * for dirty, + for staged
+    # GIT_PS1_SHOWUNTRACKEDFILES=true   # Show % for untracked files
+    # GIT_PS1_SHOWSTASHSTATE=true       # Show $ for stashed changes
+    # GIT_PS1_SHOWUPSTREAM="auto"       # Show A<N> for ahead, B<N> for behind, = for equal
+
+    # Define your PS1
+    # Example 1: User@Host:CurrentDir (git_branch_info) $
+    # PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)")\$ '
+
+    # Example 2: More detailed with colors and status
+    # This PS1 will show: [user@host:current_dir (branch_info)] $
+    # It will also indicate dirty state (*), staged changes (+), untracked files (%), etc.
+    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
+
+else
+    # Fallback if git-prompt.sh is not found
+    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
+fi
