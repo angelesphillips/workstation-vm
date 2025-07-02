@@ -1,3 +1,4 @@
 ---
 additional_packages:
   - gnome-shell-extension-window-list
+  - zenity
