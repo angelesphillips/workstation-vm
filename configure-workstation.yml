@@ -8,7 +8,7 @@
   vars_files:
     - vars.yml
   tasks:
-    - name: Set distribution_version fact
+    - name: Set distribution facts
       ansible.builtin.set_fact:
         distribution_major_version: >-
           {{ ansible_facts['distribution'] }}_{{
@@ -22,9 +22,6 @@
 
     - name: Include the appropriate distribution tasks
       ansible.builtin.include_tasks: tasks/distribution_tasks.yml
-
-    #- name: Collect package facts
-    #  ansible.builtin.package_facts:
 
     - name: Install additional_packages
       when: additional_packages is defined
