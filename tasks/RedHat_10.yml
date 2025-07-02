@@ -1,0 +1,13 @@
+---
+# Do this for RHEL 10
+- name: Modify .bashrc to change PS1 prompt for git
+  ansible.builtin.blockinfile:
+    path: ~{{ the_user }}/.bashrc
+    marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+    state: present
+    block: "{{ lookup('file', 'files/bashrc_git_rhel10') }}"
+  tags: ps1
+

@@ -1,23 +1,46 @@
 # Git Prompt Configuration
+# This block sources the official git-prompt.sh script and sets up the PS1
+# to include Git repository status.
+
+# Check if git-prompt.sh exists and source it
 if [ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]; then
     . /usr/share/git-core/contrib/completion/git-prompt.sh
 
-    # Optional: Customize what __git_ps1 shows
-    # GIT_PS1_SHOWDIRTYSTATE=true       # Show * for dirty, + for staged
-    # GIT_PS1_SHOWUNTRACKEDFILES=true   # Show % for untracked files
-    # GIT_PS1_SHOWSTASHSTATE=true       # Show $ for stashed changes
-    # GIT_PS1_SHOWUPSTREAM="auto"       # Show A<N> for ahead, B<N> for behind, = for equal
+    # --- Customize __git_ps1 behavior (uncomment as desired) ---
+    # These variables control what information __git_ps1 displays.
 
-    # Define your PS1
-    # Example 1: User@Host:CurrentDir (git_branch_info) $
-    # PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]$(__git_ps1 " (%s)")\$ '
+    # Show * for dirty (unstaged changes), + for staged changes
+    export GIT_PS1_SHOWDIRTYSTATE=true
 
-    # Example 2: More detailed with colors and status
-    # This PS1 will show: [user@host:current_dir (branch_info)] $
-    # It will also indicate dirty state (*), staged changes (+), untracked files (%), etc.
-    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
+    # Show % for untracked files
+    export GIT_PS1_SHOWUNTRACKEDFILES=true
+
+    # Show $ for stashed changes
+    export GIT_PS1_SHOWSTASHSTATE=true
+
+    # Show A<N> for ahead, B<N> for behind, = for equal with upstream branch
+    # "auto" means it will only show if there's an upstream defined.
+    export GIT_PS1_SHOWUPSTREAM="auto"
+
+    # Show the number of cherry-picked, rebased, or reverted commits
+    # export GIT_PS1_SHOWCHERRYPICK=true
+
+    # Show a '#' if a rebase is in progress
+    # export GIT_PS1_SHOWREBASE=true
+
+    # --- Define your PS1 prompt ---
+    # This is where you construct the actual prompt string.
+
+    # Example 1: User@Host:CurrentDir (git_branch_info)$
+    # PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
+
+    # Example 2: A common, clean, and informative prompt format
+    # [user@host current_dir (branch_info)]$
+    # (Colors: Green for user@host, Blue for directory, Yellow for Git info)
+    PS1='\[\033[01;32m\][\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]]\$ '
 
 else
-    # Fallback if git-prompt.sh is not found
+    # Fallback PS1 if git-prompt.sh is not found
+    # This ensures you still have a usable prompt even without Git info.
     PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[00m\]\$ '
 fi

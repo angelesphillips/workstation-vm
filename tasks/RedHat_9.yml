@@ -1,0 +1,33 @@
+---
+# Do this for RHEL 9
+- name: Modify .bashrc to change PS1 prompt for git
+  ansible.builtin.blockinfile:
+    path: ~{{ the_user }}/.bashrc
+    marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+    state: present
+    block: "{{ lookup('file', 'files/bashrc_git') }}"
+  tags: ps1
+
+- name: Enable the gnome-extensions extension that shows the window list
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.command:
+    argv:
+      - gnome-extensions
+      - enable
+      - window-list@gnome-shell-extensions.gcampax.github.com
+  changed_when: false
+
+- name: Fix locked background
+  ansible.builtin.file:
+    path: /etc/dconf/db/local.d/locks/00-default-wallpaper
+    state: absent
+  register: background_fix
+
+- name: Update dconf
+  become: true
+  when: background_fix['changed'] | bool is true
+  ansible.builtin.command: dconf update

@@ -10,32 +10,39 @@
   tasks:
     - name: Set distribution_version fact
       ansible.builtin.set_fact:
-        distribution_version: >-
+        distribution_major_version: >-
           {{ ansible_facts['distribution'] }}_{{
-          ansible_facts['distribution_version'] }}
+          ansible_facts['distribution_major_version'] }}.yml
+        distribution_minor_version: >-
+          {{ ansible_facts['distribution'] }}_{{
+          ansible_facts['distribution_version'] }}.yml
 
-    - name: Include the appropriate variables
-      ansible.builtin.include_vars: vars/{{ distribution_version }}.yml
+    - name: Include the appropriate distribution variables
+      ansible.builtin.include_tasks: tasks/distribution_vars.yml
 
-    - name: Collect package facts
-      ansible.builtin.package_facts:
+    - name: Include the appropriate distribution tasks
+      ansible.builtin.include_tasks: tasks/distribution_tasks.yml
+
+    #- name: Collect package facts
+    #  ansible.builtin.package_facts:
 
     - name: Install additional_packages
+      when: additional_packages is defined
       ansible.builtin.dnf:
         name: "{{ additional_packages }}"
         state: present
 
-    - name: Make Regular Directories
+    - name: Make regular directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
         owner: "{{ the_user }}"
         group: "{{ the_user }}"
-        mode: "0775"
+        mode: "0755"
       loop:
         - ~{{ the_user }}/bin
 
-    - name: Make Secure Directories
+    - name: Make secure directories
       ansible.builtin.file:
         path: "{{ item }}"
         state: directory
@@ -66,49 +73,6 @@
         mode: "0644"
         state: present
 
-    # Do this for RHEL 8 & RHEL 9
-    - name: Modify .bashrc to change PS1 prompt for git
-      when:
-        - "ansible_facts['distribution'] == 'RedHat'"
-        - ansible_facts['distribution_version'] in rhel_version
-      vars:
-        rhel_version:
-          - "8.4"
-          - "8.5"
-          - "8.6"
-          - "9.0"
-          - "9.1"
-          - "9.2"
-          - "9.3"
-          - "9.4"
-      ansible.builtin.blockinfile:
-        path: ~{{ the_user }}/.bashrc
-        marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
-        owner: "{{ the_user }}"
-        group: "{{ the_user }}"
-        mode: "0644"
-        state: present
-        block: "{{ lookup('file', 'files/bashrc_git') }}"
-      tags: ps1
-
-    # Do this for RHEL 10
-    - name: Modify .bashrc to change PS1 prompt for git
-      when:
-        - "ansible_facts['distribution'] == 'RedHat'"
-        - ansible_facts['distribution_version'] in rhel_version
-      vars:
-        rhel_version:
-          - "10.0"
-      ansible.builtin.blockinfile:
-        path: ~{{ the_user }}/.bashrc
-        marker: "# {mark} ANSIBLE MANAGED BLOCK PS1"
-        owner: "{{ the_user }}"
-        group: "{{ the_user }}"
-        mode: "0644"
-        state: present
-        block: "{{ lookup('file', 'files/bashrc_git_rhel10') }}"
-      tags: ps1
-
     - name: Modify .bashrc to add the local-git function
       ansible.builtin.blockinfile:
         path: ~{{ the_user }}/.bashrc
@@ -119,109 +83,26 @@
         mode: "0644"
         state: present
 
-    #- name: Add GitHub keys for {{ git_fullname }}
-    #  ansible.builtin.copy:
-    #    content: "{{ item['data'] }}"
-    #    dest: ~{{ the_user }}/.ssh/{{ item['name'] }}
-    #    owner: "{{ the_user }}"
-    #    group: "{{ the_user }}"
-    #    mode: "{{ item['mode'] }}"
-    #  when:
-    #    - git_config is defined
-    #    - github_keys is defined
-    #  loop: "{{ github_keys }}"
-    #  loop_control:
-    #    label: Adding key {{ item['name'] }} to ~{{ the_user }}/.ssh/
-
-    - name: Configure SSH for GITHUB
-      block:
-        #- name: Create ~{{ the_user }}/.ssh/config.d
-        #  file:
-        #    path: ~{{ the_user }}/.ssh/config.d
-        #    owner: "{{ the_user }}"
-        #    group: "{{ the_user }}"
-        #    mode: '0775'
-        #    state: directory
-
-        #- name: Add 'include' line to ~{{ the_user }}/.ssh/config
-        #  lineinfile:
-        #    path: ~{{ the_user }}/.ssh/config
-        #    regexp: '^[Ii]nclude'
-        #    line: 'include ~/.ssh/config.d/*.conf'
-        #    insertbefore: BOF
-        #    state: present
-
-        #- name: Update SSH configuration for GitHub Host
-        #  blockinfile:
-        #    path: ~{{ the_user }}/.ssh/config.d/github.conf
-        #    marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
-        #    block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
-        #    insertafter: EOF
-        #    owner: "{{ the_user }}"
-        #    group: "{{ the_user }}"
-        #    mode: '0644'
-        #    create: true
-        #    state: present
-        #    setype: ssh_home_t
-
-        - name: Configure 'mykeys' function
-          blockinfile:
-            path: ~{{ the_user }}/.bashrc
-            marker: "# {mark} ANSIBLE MANAGED BLOCK MYKEYS FUNCTION"
-            block: "{{ lookup('template', 'templates/mykeys.j2') }}"
-            owner: "{{ the_user }}"
-            group: "{{ the_user }}"
-            mode: '0644'
-            state: present
+    - name: Configure 'mykeys' function
       when: github_keys is defined
+      blockinfile:
+        path: ~{{ the_user }}/.bashrc
+        marker: "# {mark} ANSIBLE MANAGED BLOCK MYKEYS FUNCTION"
+        block: "{{ lookup('template', 'templates/mykeys.j2') }}"
+        owner: "{{ the_user }}"
+        group: "{{ the_user }}"
+        mode: '0644'
+        state: present
 
     - name: Customize .vimrc
       ansible.builtin.copy:
         src: files/vimrc
-        dest: "~student/.vimrc"
+        dest: "~{{ the_user }}/.vimrc"
         owner: "{{ the_user }}"
         group: "{{ the_user }}"
         mode: "0664"
       tags: editors
       ignore_errors: true
-
-#    - name: GitHub CLI block
-#      block:
-#        - name: Check for GitHub CLI repository
-#          ansible.builtin.stat:
-#            path: /etc/yum.repos.d/gh-cli.repo
-#          register: gh_cli
-#          tags: github
-#
-#        - name: Enable GitHub CLI repository
-#          ansible.builtin.uri:
-#            url: https://cli.github.com/packages/rpm/gh-cli.repo
-#            return_content: true
-#            dest: /etc/yum.repos.d/gh-cli.repo
-#          when: gh_cli['stat']['exists'] | bool == false
-#          tags: github
-#
-#        - name: Install gh software
-#          ansible.builtin.dnf:
-#            name: gh
-#            state: latest
-#
-#        - name: Check for GitHub completion file
-#          ansible.builtin.stat:
-#            path: /etc/bash_completion.d/gh-cli
-#          register: gh_cli_completion
-#          tags: github
-#
-#        - name: Generate GitHub CLI completion
-#          ansible.builtin.shell: gh completion -s bash > /etc/bash_completion.d/gh-cli
-#          when: gh_cli_completion['stat']['exists'] | bool == false
-#          tags: github
-#
-#        - name: Disable GitHub CLI repository
-#          ansible.builtin.yum_repository:
-#            name: gh-cli
-#            state: absent
-#      when: "'gh' not in ansible_facts['packages']"
 
     - name: Use 12-hour clock format instead of 24-hour
       become: true
@@ -229,9 +110,6 @@
       ansible.builtin.command: >-
         gsettings set org.gnome.desktop.interface clock-format '12h'
       changed_when: false
-      #dconf:
-      #  key: "/org/gnome/desktop/interface/clock-format"
-      #  value: "'12h'"
 
     - name: Display seconds in the top-bar clock
       become: true
@@ -239,92 +117,42 @@
       ansible.builtin.command: >-
         gsettings set org.gnome.desktop.interface clock-show-seconds true
       changed_when: false
-      #dconf:
-      #  key: "/org/gnome/desktop/interface/clock-show-seconds"
-      #  value: "true"
 
-    - name: Enable the gnome-tweaks extension that shows the window list
-      vars:
-        rhel_version:
-          - "8.4"
-          - "8.5"
-          - "8.6"
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.shell
-          - enabled-extensions
-          - "['window-list@gnome-shell-extensions.gcampax.github.com']"
-      changed_when: false
-      when:
-        - "ansible_facts['distribution'] == 'RedHat'"
-        - ansible_facts['distribution_version'] in rhel_version
-      #dconf:
-      #  key: "/org/gnome/shell/enabled-extensions"
-      #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+    - name: Venue block
+      block:
+        - name: Slurp /etc/rht
+          ansible.builtin.slurp:
+            path: /etc/rht
+          register: slurp_rht
 
-    - name: Enable the gnome-extensions extension that shows the window list
-      vars:
-        rhel_version:
-          - "9.0"
-          - "9.1"
-          - "9.2"
-          - "9.3"
-          - "9.4"
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gnome-extensions
-          - enable
-          - window-list@gnome-shell-extensions.gcampax.github.com
-      changed_when: false
-      when:
-        - "ansible_facts['distribution'] == 'RedHat'"
-        - ansible_facts['distribution_version'] in rhel_version
-      #dconf:
-      #  key: "/org/gnome/shell/enabled-extensions"
-      #  value: "['window-list@gnome-shell-extensions.gcampax.github.com']"
+        - name: Set rht_content fact
+          vars:
+            line_delimiter: "\n"
+          ansible.builtin.set_fact:
+            rht_content: >-
+              {{ slurp_rht['content'] | b64decode | split(line_delimiter) }}
 
-    - name: Slurp /etc/rht
-      ansible.builtin.slurp:
-        path: /etc/rht
-      register: slurp_rht
+        - name: Set venue fact
+          vars:
+            line_search: "^RHT_VENUE"
+            line_match: >-
+              {% for LINE in rht_content -%}
+                {% if LINE | regex_search(line_search) | default(false, true) -%}
+                  {{ LINE | split('=') | last }}
+                {%- endif %}
+              {%- endfor %}
+          ansible.builtin.set_fact:
+            venue: "{{ line_match | split('=') | last | lower }}"
 
-    - name: Set rht_content fact
-      vars:
-        line_delimiter: "\n"
-      ansible.builtin.set_fact:
-        rht_content: >-
-          {{ slurp_rht['content'] | b64decode | split(line_delimiter) }}
-
-    - name: Set venue fact
-      vars:
-        line_search: "^RHT_VENUE"
-        line_match: >-
-          {% for LINE in rht_content -%}
-            {% if LINE | regex_search(line_search) | default(false, true) -%}
-              {{ LINE | split('=') | last }}
-            {%- endif %}
-          {%- endfor %}
-      ansible.builtin.set_fact:
-        venue: "{{ line_match | split('=') | last | lower }}"
-
-    - name: Turn off keyboard repeats
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command: >-
-        gsettings set org.gnome.desktop.peripherals.keyboard repeat false
-      changed_when: false
-      #dconf:
-      #  key: "/org/gnome/desktop/peripherals/keyboard/repeat"
-      #  value: "true"
-      when:
-        - venue is defined
-        - venue == "rav" or venue == "novello"
+        - name: Turn off keyboard repeats
+          when:
+            - venue is defined
+            - venue == "rav" or venue == "novello"
+          become: true
+          become_user: "{{ the_user }}"
+          ansible.builtin.command: >-
+            gsettings set org.gnome.desktop.peripherals.keyboard repeat false
+          changed_when: false
 
     - name: Set favorites
       become: true
@@ -337,69 +165,50 @@
           - favorite-apps
           - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop', 'code.desktop']"
       changed_when: false
-      #dconf:
-      #  key: "/org/gnome/shell/favorite-apps"
-      #  value: "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop']"
 
-    - name: Fix locked background
-      vars:
-        affected_versions:
-          - "8.4"
-          - "8.5"
-          - "8.6"
-          - "9.0"
-          - "9.1"
-      ansible.builtin.file:
-        path: /etc/dconf/db/local.d/locks/00-default-wallpaper
-        state: absent
-      when: ansible_facts['distribution_version'] in affected_versions
-      register: background_fix
+    - name: Backgroud block
+      block:
+        - name: Copy new background file
+          ansible.builtin.copy:
+            src: files/bw-900-700.png
+            dest: /home/{{ the_user }}/Pictures/bw-900-700.png
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: "0664"
 
-    - name: Update dconf
-      become: true
-      ansible.builtin.command: dconf update
+        - name: Set background primary-color
+          become: true
+          become_user: "{{ the_user }}"
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.background
+              - primary-color
+              - "'#000000000000'"
 
-    - name: Copy new background file
-      ansible.builtin.copy:
-        src: files/bw-900-700.png
-        dest: /home/{{ the_user }}/Pictures/bw-900-700.png
-        owner: "{{ the_user }}"
-        group: "{{ the_user }}"
-        mode: "0664"
+        - name: Set background picture-options
+          become: true
+          become_user: "{{ the_user }}"
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.background
+              - picture-options
+              - "zoom"
 
-    - name: Set background primary-color
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.desktop.background
-          - primary-color
-          - "'#000000000000'"
-
-    - name: Set background picture-options
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.desktop.background
-          - picture-options
-          - "zoom"
-
-    - name: Set new background
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.desktop.background
-          - picture-uri
-          - "file:///home/{{ the_user }}/Pictures/bw-900-700.png"
-      changed_when: false
+        - name: Set new background
+          become: true
+          become_user: "{{ the_user }}"
+          ansible.builtin.command:
+            argv:
+              - gsettings
+              - set
+              - org.gnome.desktop.background
+              - picture-uri
+              - "file:///home/{{ the_user }}/Pictures/bw-900-700.png"
+          changed_when: false
 
     - name: Workspaces block
       become: true
