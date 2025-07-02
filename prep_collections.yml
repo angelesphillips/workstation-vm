@@ -50,17 +50,17 @@
           --fail --silent --show-error --output /dev/null
       no_log: true
 
-    - name: Add RED_HAT_OFFLINE_TOKEN line
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.lineinfile:
-        path: ~{{ the_user }}/.bashrc
-        regexp: "^export RED_HAT_OFFLINE_TOKEN"
-        line: "export RED_HAT_OFFLINE_TOKEN='{{ red_hat_offline_token }}'"
-        owner: "{{ the_user }}"
-        group: "{{ the_user }}"
-        mode: "0644"
-      register: add_offline_token
+    #- name: Add RED_HAT_OFFLINE_TOKEN line
+    #  become: true
+    #  become_user: "{{ the_user }}"
+    #  ansible.builtin.lineinfile:
+    #    path: ~{{ the_user }}/.bashrc
+    #    regexp: "^export RED_HAT_OFFLINE_TOKEN"
+    #    line: "export RED_HAT_OFFLINE_TOKEN='{{ red_hat_offline_token }}'"
+    #    owner: "{{ the_user }}"
+    #    group: "{{ the_user }}"
+    #    mode: "0644"
+    #  register: add_offline_token
 
     - name: Run 'source ~/.bashrc'
       ansible.builtin.debug:

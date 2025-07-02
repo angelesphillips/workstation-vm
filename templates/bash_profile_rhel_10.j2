@@ -29,10 +29,9 @@ then
   if [ -n "${CURRENT_REMOTE_CONNECTIONS}" ]
   then
     ACTIVE_TERMINALS=$(ps -ef | grep " pts/" | awk '{print $6}' | sort -u)
-    REMOTE_USER="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $1}')"
-    REMOTE_TERMINAL="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $2}')"
-    REMOTE_IP="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $3}')"
-
+    REMOTE_USER=$(echo "${CURRENT_REMOTE_CONNECTIONS}" | grep sshd-session | awk '{print $1}')
+    REMOTE_TERMINAL=$(ps -ef | grep 'sshd-session: student@pts' | grep -v 'color=auto' | cut -d@ -f2)
+    REMOTE_IP=$(echo "${CURRENT_REMOTE_CONNECTIONS}" | grep sshd-session | grep -o "[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}")
 WARNING_MESSAGE="$(cat <<-END
 ===============================================================================
 The ${REMOTE_USER} user has connected to the ${REMOTE_TERMINAL} terminal from ${REMOTE_IP}.

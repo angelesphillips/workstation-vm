@@ -33,3 +33,14 @@
   become: true
   when: background_fix['changed'] | bool is true
   ansible.builtin.command: dconf update
+
+- name: Update ~/.bash_profile
+  ansible.builtin.blockinfile:
+    path: ~{{ the_user }}/.bash_profile
+    marker: "# {mark} ANSIBLE MANAGED BLOCK SECURITY"
+    block: "{{ lookup('template', 'templates/bash_profile_.j2') }}"
+    insertafter: EOF
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: '0644'
+    state: present
