@@ -32,6 +32,18 @@
   when: background_fix['changed'] | bool is true
   ansible.builtin.command: dconf update
 
+- name: Set favorites
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell
+      - favorite-apps
+      - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop', 'code.desktop']"
+  changed_when: false
+
 - name: Update ~/.bash_profile
   ansible.builtin.blockinfile:
     path: ~{{ the_user }}/.bash_profile

@@ -1,0 +1,43 @@
+---
+- name: Configure workstation for RDP
+  hosts: workstation
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Add rdp service
+      ansible.posix.firewalld:
+        service: rdp
+        state: enabled
+        immediate: true
+        permanent: true
+
+    - name: Start and enable gnome-remote-desktop
+      ansible.builtin.service:
+        name: gnome-remote-desktop
+        state: started
+        enabled: true
+
+- name: Configure classroom for RDP
+  hosts: classroom
+  become: true
+  remote_user: instructor
+  gather_facts: false
+  tasks:
+    - name: Add rich rule
+      ansible.posix.firewalld:
+        port_forward:
+          - port: 3389
+            proto: tcp
+            toport: 3389
+            toaddr: 172.25.250.9
+        zone: external
+        state: enabled
+        immediate: true
+        permanent: true
+
+    - name: Add rdp service
+      ansible.posix.firewalld:
+        service: rdp
+        state: enabled
+        immediate: true
+        permanent: true

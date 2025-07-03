@@ -3,6 +3,7 @@ workstation ansible_connection=local ansible_become_password=student
 utility ansible_become_password=student
 git ansible_become_password=student
 aap ansible_become_password=student
+classroom
 
 [server_VMs]
 servera

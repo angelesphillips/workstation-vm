@@ -151,18 +151,6 @@
             gsettings set org.gnome.desktop.peripherals.keyboard repeat false
           changed_when: false
 
-    - name: Set favorites
-      become: true
-      become_user: "{{ the_user }}"
-      ansible.builtin.command:
-        argv:
-          - gsettings
-          - set
-          - org.gnome.shell
-          - favorite-apps
-          - "['firefox.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Screenshot.desktop', 'code.desktop']"
-      changed_when: false
-
     - name: Backgroud block
       block:
         - name: Copy new background file

@@ -21,3 +21,16 @@
     group: "{{ the_user }}"
     mode: '0644'
     state: present
+
+# This list is still missing the screenshot application
+- name: Set favorites
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell
+      - favorite-apps
+      - "['firefox.desktop', 'org.gnome.Ptyxis.desktop', 'code.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Screenshot.desktop']"
+  changed_when: false
