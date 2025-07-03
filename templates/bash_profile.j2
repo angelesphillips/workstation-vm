@@ -1,20 +1,15 @@
+{% if github_keys is defined %}
 # Remove personal SSH public and private keys on a new login
 {% set private_keys = github_keys | selectattr('type', '==', 'private') %}
 {% for PRIVATE_KEY in private_keys %}
-if [ -f ~/.ssh/{{ PRIVATE_KEY['name'] }} ]
-then
-  rm -f ~/.ssh/{{ PRIVATE_KEY['name'] }}
-fi
+[ -f ~/.ssh/{{ PRIVATE_KEY['name'] }} ] && rm -f ~/.ssh/{{ PRIVATE_KEY['name'] }}
 {% endfor %}
-
 {% set public_keys = github_keys | selectattr('type', '==', 'public') %}
 {% for PUBLIC_KEY in public_keys %}
-if [ -f ~/.ssh/{{ PUBLIC_KEY['name'] }} ]
-then
-  rm -f ~/.ssh/{{ PUBLIC_KEY['name'] }}
-fi
+[ -f ~/.ssh/{{ PUBLIC_KEY['name'] }} ] && rm -f ~/.ssh/{{ PUBLIC_KEY['name'] }}
 {% endfor %}
 
+{% endif %}
 # Remove TOKEN lines
 sed -i '/_TOKEN/d' ~/.bashrc
 

@@ -42,7 +42,7 @@
             dest: ~{{ the_user }}/.gitconfig
             owner: "{{ the_user }}"
             group: "{{ the_user }}"
-            mode: '0664'
+            mode: "0664"
             remote_src: true
 
       rescue:
@@ -70,7 +70,7 @@
             dest: "{{ git_personal_config }}"
             owner: "{{ the_user }}"
             group: "{{ the_user }}"
-            mode: '0444'
+            mode: "0444"
             remote_src: true
       when: git_scope | lower == "global"
       tags: git

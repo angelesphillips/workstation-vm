@@ -7,7 +7,7 @@
     - name: Update temporary repo file permissions
       ansible.builtin.file:
         path: "{{ item }}"
-        mode: '0644'
+        mode: "0644"
       with_fileglob:
         - /etc/yum.repos.d/automation-platform*.repo
 

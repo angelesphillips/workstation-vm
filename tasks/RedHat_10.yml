@@ -19,7 +19,7 @@
     insertafter: EOF
     owner: "{{ the_user }}"
     group: "{{ the_user }}"
-    mode: '0644'
+    mode: "0644"
     state: present
 
 # This list is still missing the screenshot application

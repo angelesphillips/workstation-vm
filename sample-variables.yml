@@ -29,12 +29,12 @@ git:
 # access token.
 #github_keys:
 #  - name: github_rsa
-#    mode: '0600'
+#    mode: "0600"
 #    type: private
 #    data: |
 #      <PRIVATE SSH KEY USED TO ACCESS GITHUB>
 #  - name: github_rsa.pub
-#    mode: '0644'
+#    mode: "0644"
 #    type: public
 #    data: |
 #      <PUBLIC SSH KEY ASSOCIATED WITH PRIVATE GITHUB SSH KEY>

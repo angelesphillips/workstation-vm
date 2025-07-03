@@ -38,7 +38,7 @@
         state: directory
         owner: "{{ gui_user }}"
         group: "{{ gui_user }}"
-        mode: '0700'
+        mode: "0700"
         setype: user_tmp_t
 
     - name: Create auth.json
@@ -47,7 +47,7 @@
         dest: /run/user/{{ user_id['stdout'] }}/containers/auth.json
         owner: "{{ gui_user }}"
         group: "{{ gui_user }}"
-        mode: '0600'
+        mode: "0600"
         setype: user_tmp_t
 
     - name: Pull container images

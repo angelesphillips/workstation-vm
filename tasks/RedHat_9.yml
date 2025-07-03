@@ -48,9 +48,9 @@
   ansible.builtin.blockinfile:
     path: ~{{ the_user }}/.bash_profile
     marker: "# {mark} ANSIBLE MANAGED BLOCK SECURITY"
-    block: "{{ lookup('template', 'templates/bash_profile_.j2') }}"
+    block: "{{ lookup('template', 'templates/bash_profile.j2') }}"
     insertafter: EOF
     owner: "{{ the_user }}"
     group: "{{ the_user }}"
-    mode: '0644'
+    mode: "0644"
     state: present

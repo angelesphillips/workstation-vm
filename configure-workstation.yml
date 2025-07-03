@@ -88,7 +88,7 @@
         block: "{{ lookup('template', 'templates/mykeys.j2') }}"
         owner: "{{ the_user }}"
         group: "{{ the_user }}"
-        mode: '0644'
+        mode: "0644"
         state: present
 
     - name: Customize .vimrc
