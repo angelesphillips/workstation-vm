@@ -8,9 +8,9 @@
     space: " "
     GB: " GB"
   tasks:
-    - name: Display facts
-      ansible.builtin.debug:
-        var: ansible_facts['devices']
+    #- name: Display facts
+    #  ansible.builtin.debug:
+    #    var: ansible_facts['devices']
 
     #- name: Display ansible_facts['processor_count']
     #  ansible.builtin.debug:
@@ -47,7 +47,8 @@
     - name: Print device_and_size
       ansible.builtin.debug:
         msg: >-
-          {{ item['key'] }}:{{ item['value']['size'] | regex_replace(GB) | int }}
+          Hard disk: {{ item['key'] }}
+          ({{ item['value']['size'] | regex_replace(GB) | int }} GB)
       loop: "{{ hard_disks }}"
       loop_control:
         label: Displaying hard disk information
@@ -55,5 +56,5 @@
     - name: Print summary
       ansible.builtin.debug:
         msg: >-
-          {{ ansible_facts['hostname'] }}:{{ actual_memory }}:{{
-          ansible_facts['processor_count'] }}
+          {{ ansible_facts['hostname'] }}: {{ actual_memory }} GB RAM
+          & {{ ansible_facts['processor_count'] }} CPU(s)
