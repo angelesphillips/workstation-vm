@@ -4,6 +4,7 @@
   become: true
   become_user: student
   gather_facts: false
+  tags: containers
   vars_files:
     - vault.yml
   vars:
@@ -15,7 +16,7 @@
       ansible.builtin.dnf:
         name:
           - podman
-        state: latest
+        state: present
 
     - name: User ID block
       become: true

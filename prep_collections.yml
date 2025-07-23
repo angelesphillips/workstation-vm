@@ -13,20 +13,11 @@
     - automation_hub_token.yml
   tasks:
     - name: Fail if automation_hub_token is not defined
-      ansible.builtin.assert:
-        that: automation_hub_token is defined
-        success_msg: The 'automation_hub_token' variable is defined.
-        fail_msg: >-
+      when: automation_hub_token is not defined
+      ansible.builtin.fail:
+        msg: >-
           The 'automation_hub_token' variable must be defined. Generate your
           token at https://console.redhat.com/ansible/automation-hub/token
-
-    - name: Fail if red_hat_offline_token is not defined
-      ansible.builtin.assert:
-        that: red_hat_offline_token is defined
-        success_msg: The 'red_hat_offline_token' variable is defined.
-        fail_msg: >-
-          The 'red_hat_offline_token' variable must be defined. Generate your
-          offline token at https://access.redhat.com/management/api
 
     - name: Add automation hub token line
       become: true
@@ -50,19 +41,7 @@
           --fail --silent --show-error --output /dev/null
       no_log: true
 
-    #- name: Add RED_HAT_OFFLINE_TOKEN line
-    #  become: true
-    #  become_user: "{{ the_user }}"
-    #  ansible.builtin.lineinfile:
-    #    path: ~{{ the_user }}/.bashrc
-    #    regexp: "^export RED_HAT_OFFLINE_TOKEN"
-    #    line: "export RED_HAT_OFFLINE_TOKEN='{{ red_hat_offline_token }}'"
-    #    owner: "{{ the_user }}"
-    #    group: "{{ the_user }}"
-    #    mode: "0644"
-    #  register: add_offline_token
-
     - name: Run 'source ~/.bashrc'
+      when: add_token['changed'] | bool is true
       ansible.builtin.debug:
         msg: 'Use new bashrc settings: source ~/.bashrc'
-      when: (add_token['changed'] | bool == true) or (add_offline_token['changed'] | bool == true)
