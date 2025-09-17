@@ -54,9 +54,9 @@
     - name: Pull container images
       ansible.builtin.command: podman pull {{ item }}
       loop:
-        - quay.io/redhattraining/flamel
-        - quay.io/redhattraining/sk
-        #- quay.io/redhattraining/sk-full
+        #- quay.io/redhattraining/flamel
+        #- quay.io/redhattraining/sk
+        - quay.io/redhattraining/sk-full
         - quay.io/angelesphillips/spellr
 
     - name: Remove auth.json
