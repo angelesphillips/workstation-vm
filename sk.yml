@@ -63,7 +63,7 @@
                 Port 22022
                 UserKnownHostsFile /dev/null
                 StrictHostKeyChecking no
-                IdentityFile ~{{ the_user }}/.ssh/instructor_key
+                IdentityFile ~/.ssh/ravell_id_rsa
                 LogLevel ERROR
                 PreferredAuthentications publickey
             dest: ~{{ the_user }}/.ssh/config.d/classroom.conf
