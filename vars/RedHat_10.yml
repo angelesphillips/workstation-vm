@@ -2,3 +2,4 @@
 additional_packages:
   - gnome-shell-extension-window-list
   - zenity
+    #  - gnome-shell-extension-dash-to-panel
