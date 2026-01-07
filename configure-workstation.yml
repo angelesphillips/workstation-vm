@@ -17,17 +17,14 @@
           {{ ansible_facts['distribution'] }}_{{
           ansible_facts['distribution_version'] }}.yml
 
-    - name: Include the appropriate distribution variables
-      ansible.builtin.include_tasks: tasks/distribution_vars.yml
-
-    - name: Include the appropriate distribution tasks
-      ansible.builtin.include_tasks: tasks/distribution_tasks.yml
-
     - name: Install additional_packages
       when: additional_packages is defined
       ansible.builtin.dnf:
         name: "{{ additional_packages }}"
         state: present
+
+    - name: Include the appropriate distribution variables
+      ansible.builtin.include_tasks: tasks/distribution_vars.yml
 
     - name: Make regular directories
       ansible.builtin.file:

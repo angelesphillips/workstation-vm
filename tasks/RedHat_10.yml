@@ -34,3 +34,27 @@
       - favorite-apps
       - "['firefox.desktop', 'org.gnome.Ptyxis.desktop', 'code.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.Screenshot.desktop']"
   changed_when: false
+
+- name: Update ptyxis (new shell in RHEL 10) to use dark mode
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.desktop.interface
+      - color-scheme
+      - "prefer-dark"
+  changed_when: false
+
+- name: Enable gnome window-list extension
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.command:
+    argv:
+      - gsettings
+      - set
+      - org.gnome.shell
+      - enabled-extensions
+      - "['window-list@gnome-shell-extensions.gcampax.github.com']"
+  changed_when: false
