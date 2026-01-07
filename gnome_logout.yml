@@ -1,0 +1,11 @@
+---
+- name: Logout of RHEL 10 GUI
+  hosts: workstation
+  become: true
+  become_user: student
+  gather_facts: true
+  tasks:
+    - name: Logout of RHEL 10 GUI to apply gsettings changes
+      when: ansible_facts['distribution_major_version'] | int == 10
+      ansible.builtin.command: gnome-session-quit --logout --no-prompt
+      changed_when: false

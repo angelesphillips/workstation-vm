@@ -3,8 +3,17 @@
 # ansible-playbook site.yml --ask-vault-pass
 # Sample command from this directory with the `ansible-navigator` command:
 # ansible-navigator run site.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
-- import_playbook: sk.yml
-- import_playbook: configure-workstation.yml
-#- import_playbook: prep_collections.yml
-- import_playbook: configure_motd.yml
-- import_playbook: registry_auth.yml
+- name: Prepare workstation for scaffolding
+  ansible.builtin.import_playbook: sk.yml
+
+- name: Configure workstation VM
+  ansible.builtin.import_playbook: configure-workstation.yml
+
+- name: Configure MOTD
+  ansible.builtin.import_playbook: configure_motd.yml
+
+- name: Download container tools
+  ansible.builtin.import_playbook: registry_auth.yml
+
+- name: Logout of RHEL 10 GUI
+  ansible.builtin.import_playbook: gnome_logout.yml
