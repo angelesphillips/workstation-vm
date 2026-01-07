@@ -21,13 +21,3 @@
     - query_tasks_minor['stat']['exists'] | bool is false
     - query_tasks_major['stat']['exists'] | bool is true
   ansible.builtin.include_tasks: tasks/{{ distribution_major_version }}
-
-- name: Check for minor distribution task file
-  ansible.builtin.stat:
-    path: tasks/{{ distribution_minor_version }}
-  register: query_tasks_minor
-
-- name: >-
-    Include file: tasks/{{ distribution_minor_version }}
-  when: query_tasks_minor['stat']['exists'] | bool is true
-  ansible.builtin.include_tasks: tasks/{{ distribution_minor_version }}
