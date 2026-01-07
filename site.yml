@@ -5,6 +5,6 @@
 # ansible-navigator run site.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
 - import_playbook: sk.yml
 - import_playbook: configure-workstation.yml
-- import_playbook: prep_collections.yml
+#- import_playbook: prep_collections.yml
 - import_playbook: configure_motd.yml
 - import_playbook: registry_auth.yml

@@ -85,3 +85,6 @@
     git_scope: global
   ansible.builtin.import_playbook: configure_git.yml
 
+- name: Prep for installing collections
+  ansible.builtin.import_playbook: prep_collections.yml
+
