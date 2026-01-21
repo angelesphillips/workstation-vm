@@ -58,6 +58,7 @@
         #- quay.io/redhattraining/sk
         - quay.io/redhattraining/sk-full
         - quay.io/angelesphillips/spellr
+        - quay.io/angelesphillips/vale
 
     - name: Remove auth.json
       ansible.builtin.file:
