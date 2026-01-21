@@ -60,15 +60,15 @@
         mode: "0644"
         state: present
 
-    - name: Configure spellr aliases
-      ansible.builtin.blockinfile:
-        path: ~{{ the_user }}/.bashrc
-        marker: "# {mark} ANSIBLE MANAGED BLOCK SPELLR ALIASES"
-        block: "{{ lookup('file', 'files/bashrc_aliases_spellr') }}"
-        owner: "{{ the_user }}"
-        group: "{{ the_user }}"
-        mode: "0644"
-        state: present
+#    - name: Configure spellr aliases
+#      ansible.builtin.blockinfile:
+#        path: ~{{ the_user }}/.bashrc
+#        marker: "# {mark} ANSIBLE MANAGED BLOCK SPELLR ALIASES"
+#        block: "{{ lookup('file', 'files/bashrc_aliases_spellr') }}"
+#        owner: "{{ the_user }}"
+#        group: "{{ the_user }}"
+#        mode: "0644"
+#        state: present
 
     - name: Modify .bashrc to add the local-git function
       ansible.builtin.blockinfile:
