@@ -44,9 +44,30 @@
 
         - name: Update SSH configuration for GitHub Host
           ansible.builtin.blockinfile:
-            path: ~{{ the_user }}/.ssh/config.d/github.conf
+            path: ~{{ the_user }}/.ssh/config
             marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
             block: "{{ lookup('template', 'templates/ssh_config.j2') }}"
+            insertafter: EOF
+            owner: "{{ the_user }}"
+            group: "{{ the_user }}"
+            mode: "0644"
+            create: true
+            state: present
+            setype: ssh_home_t
+
+        - name: Update SSH configuration for bastion
+          ansible.builtin.blockinfile:
+            path: ~{{ the_user }}/.ssh/config.d/classroom.conf
+            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            block: |
+              Host tools-na100bastion
+                 Hostname bastion-tools-na100.dev.ole.redhat.com
+                 User cloud-user
+                 IdentityFile ~/.ssh/ocp-tools-na100
+                 IdentitiesOnly yes
+                 PreferredAuthentications publickey
+                 StrictHostKeyChecking no
+                 UpdateHostKeys yes
             insertafter: EOF
             owner: "{{ the_user }}"
             group: "{{ the_user }}"
