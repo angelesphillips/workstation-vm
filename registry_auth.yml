@@ -57,7 +57,6 @@
         - quay.io/redhattraining/sk-full
         - quay.io/angelesphillips/spellr
         - quay.io/angelesphillips/vale
-        - quay.io/redhattraining/au245-pcommit
 
     - name: Remove auth.json
       ansible.builtin.file:
