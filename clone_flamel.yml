@@ -1,0 +1,38 @@
+---
+- name: Clone flamel repository
+  hosts: workstation
+  become: true
+  become_user: "{{ the_user }}"
+  gather_facts: false
+  vars_files:
+    - pat.yml
+  vars:
+    the_user: student
+    flamel_repo: https://github.com/angelesphillips/flamel
+  tasks:
+    - name: >-
+        Query for directory: /home/{{ the_user }}/{{ flamel_repo | basename }}
+      ansible.builtin.stat:
+        path: /home/{{ the_user }}/{{ flamel_repo | basename }}
+      register: repo_query
+
+    - name: Clone block
+      when: repo_query['stat']['exists'] | bool is false
+      block:
+        - name: >-
+            Clone repository: {{ flamel_repo }}
+          ansible.builtin.expect:
+            chdir: /home/{{ the_user }}
+            command: >-
+              git clone -q
+              https://angelesphillips@github.com/angelesphillips/flamel
+            responses:
+              Password for 'https://angelesphillips@github.com': '{{ pat }}'
+          no_log: true
+
+      rescue:
+        - name: >-
+            Failed to clone repository: {{ flamel_repo }}
+          ansible.builtin.debug:
+            msg: >-
+              Failed to clone repository: {{ flamel_repo }}
