@@ -15,8 +15,8 @@
 - name: Download container tools
   ansible.builtin.import_playbook: registry_auth.yml
 
-- name: Clone flamel repo
-  ansible.builtin.import_playbook: clone_flamel.yml
+#- name: Clone flamel repo
+#  ansible.builtin.import_playbook: clone_flamel.yml
 
 - name: Logout of RHEL 10 GUI
   ansible.builtin.import_playbook: gnome_logout.yml
