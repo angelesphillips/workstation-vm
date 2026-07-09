@@ -57,6 +57,7 @@
         - quay.io/redhattraining/sk-full
         - quay.io/redhattraining/spellr
         - quay.io/redhattraining/vale
+        - quay.io/redhattraining/au294-custom-devcontainer:2.6.1
 
     - name: Remove auth.json
       ansible.builtin.file:

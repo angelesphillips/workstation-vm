@@ -1,0 +1,39 @@
+---
+- name: Tag and push container image
+  hosts: workstation
+  become: true
+  become_user: student
+  gather_facts: false
+  vars:
+    registry: utility.lab.example.com:5000
+  tasks:
+    - name: Tag image
+      ansible.builtin.command:
+        cmd: >-
+          podman tag quay.io/redhattraining/au294-custom-devcontainer:2.6.1
+          {{ registry }}/ansible-automation-platform-26/ansible-dev-tools-rhel9
+      changed_when: false
+
+    - name: >-
+        Log in to container registry: {{ registry }}
+      ansible.builtin.command:
+        cmd: podman login -uadmin -predhat {{ registry }}
+      changed_when: false
+
+    - name: Push container image
+      ansible.builtin.command:
+        cmd: >-
+          podman push
+          {{ registry }}/ansible-automation-platform-26/ansible-dev-tools-rhel9
+      changed_when: false
+
+    - name: >-
+        Log out of container registry: {{ registry }}
+      ansible.builtin.command:
+        cmd: podman logout {{ registry }}
+      changed_when: false
+
+    - name: Prune dangling images
+      ansible.builtin.command:
+        cmd: podman image prune -f
+      changed_when: false
