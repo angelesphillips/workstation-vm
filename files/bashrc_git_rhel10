@@ -32,12 +32,12 @@ if [ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]; then
     # This is where you construct the actual prompt string.
 
     # Example 1: User@Host:CurrentDir (git_branch_info)$
-    PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
+    # PS1='\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;34m\]\w\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]\$ '
 
     # Example 2: A common, clean, and informative prompt format
     # [user@host current_dir (branch_info)]$
     # (Colors: Green for user@host, Blue for directory, Yellow for Git info)
-    # PS1='\[\033[01;32m\][\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]]\$ '
+    PS1='\[\033[01;32m\][\u@\h\[\033[00m\] \[\033[01;34m\]\W\[\033[01;33m\]$(__git_ps1 " (%s)")\[\033[00m\]]\$ '
 
 else
     # Fallback PS1 if git-prompt.sh is not found
