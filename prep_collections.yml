@@ -31,15 +31,23 @@
         mode: "0644"
       register: add_token
 
-    - name: Prevent token from expiring
-      ansible.builtin.command:
-        cmd: >
-          curl https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
-          -d grant_type=refresh_token
-          -d client_id="cloud-services"
-          -d refresh_token="{{ automation_hub_token }}"
-          --fail --silent --show-error --output /dev/null
-      no_log: true
+    - name: Expiration block
+      block:
+        - name: Prevent token from expiring
+          ansible.builtin.command:
+            cmd: >
+              curl https://sso.redhat.com/auth/realms/redhat-external/protocol/openid-connect/token
+              -d grant_type=refresh_token
+              -d client_id="cloud-services"
+              -d refresh_token={{ automation_hub_token | escape }}
+              --fail --silent --show-error --output /dev/null
+#          no_log: true
+          register: prevent_expiring
+
+      rescue:
+        - name: Show prevent_expiring
+          ansible.builtin.debug:
+            var: prevent_expiring
 
     - name: Run 'source ~/.bashrc'
       when: add_token['changed'] | bool is true
