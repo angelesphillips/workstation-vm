@@ -1,0 +1,22 @@
+---
+- name: Prepare for RHTLC
+  hosts: workstation
+  become: true
+  gather_facts: false
+  vars:
+    rhtlc_rpm: >-
+      https://pypi.apps.tools-na.prod.nextcle.com/repository/DLERPM/socks5-wstunnel-service-4.0.0-1.fc43.x86_64.rpm
+    openvpn_script: /usr/local/bin/install-openvpn-workstation-rhel
+  tasks:
+    - name: Install custom software
+      ansible.builtin.dnf:
+        name: "{{ rhtlc_rpm }}"
+        state: present
+
+    - name: Install OpenVPN server
+      ansible.builtin.expect:
+        command: >-
+          {{ openvpn_script }}
+        responses:
+          "Continue? [y/N]": 
+            - "y"
