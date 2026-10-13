@@ -1,0 +1,41 @@
+---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook configure_git_signing.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run configure_git_signing.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
+- name: Configure Git for commit signing
+  hosts: workstation
+  become: true
+  vars_files:
+    - vars.yml
+  vars:
+    the_user: student
+  tasks:
+    - name: Include tasks/find_repos.yml
+      ansible.builtin.include_tasks: tasks/find_repos.yml
+      tags: git
+
+    - name: Include tasks/git_signing.yml
+      vars:
+        signing_config:
+          - setting: user.name
+            value: Michael Phillips
+          - setting: user.email
+            value: miphilli@redhat.com
+          - setting: credential.https://github.com.username
+            value: angelesphillips
+          - setting: credential.https://github.com.helper
+            value: '"cache --timeout=36000"'
+          - setting: gpg.format
+            value: ssh
+          - setting: user.signingkey
+            value: /home/{{ the_user }}/.ssh/{{ github_keys[0]['name'] }}.pub
+          - setting: commit.gpgsign
+            value: true
+      tags: git
+      ansible.builtin.include_tasks: tasks/git_signing.yml
+      loop: "{{ found_repos }}"
+      loop_control:
+        loop_var: found_repo_item
+        label: >-
+          Configuring Git settings for directory: {{ found_repo_item }}

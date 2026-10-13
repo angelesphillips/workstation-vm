@@ -117,36 +117,31 @@
         - repo is defined
       tags: git
 
-#    - name: Include tasks/find_repos.yml
-#      become: true
-#      become_user: "{{ the_user }}"
-#      ansible.builtin.include_tasks: tasks/find_repos.yml
-#      tags: git
-#
-#    - name: Include tasks/git_signing.yml
-#      become: true
-#      become_user: "{{ the_user }}"
-#      vars:
-#        signing_config:
-#          - setting: user.name
-#            value: Michael Phillips
-#          - setting: user.email
-#            value: miphilli@redhat.com
-#          - setting: credential.https://github.com.username
-#            value: angelesphillips
-#          - setting: credential.https://github.com.helper
-#            value: '"cache --timeout=36000"'
-#          - setting: gpg.format
-#            value: ssh
-#          - setting: user.signingkey
-#            value: /home/{{ the_user }}/.ssh/{{ github_keys[0]['name'] }}.pub
-#          - setting: commit.gpgsign
-#            value: true
-#        git_repo_path: "{{ found_repo_item['path'] }}"
-#      tags: git
-#      ansible.builtin.include_tasks: tasks/git_signing.yml
-#      loop: "{{ found_repos }}"
-#      loop_control:
-#        loop_var: found_repo_item
-#        label: >-
-#          Configuring Git settings for directory: {{ git_repo_path }}
+    - name: Include tasks/find_repos.yml
+      ansible.builtin.include_tasks: tasks/find_repos.yml
+      tags: git
+
+    - name: Include tasks/git_signing.yml
+      vars:
+        signing_config:
+          - setting: user.name
+            value: Michael Phillips
+          - setting: user.email
+            value: miphilli@redhat.com
+          - setting: credential.https://github.com.username
+            value: angelesphillips
+          - setting: credential.https://github.com.helper
+            value: '"cache --timeout=36000"'
+          - setting: gpg.format
+            value: ssh
+          - setting: user.signingkey
+            value: /home/{{ the_user }}/.ssh/{{ github_keys[0]['name'] }}.pub
+          - setting: commit.gpgsign
+            value: true
+      tags: git
+      ansible.builtin.include_tasks: tasks/git_signing.yml
+      loop: "{{ found_repos }}"
+      loop_control:
+        loop_var: found_repo_item
+        label: >-
+          Configuring Git settings for directory: {{ found_repo_item }}

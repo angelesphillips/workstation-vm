@@ -12,10 +12,17 @@
     patterns:
       - '^rht\.dynolabs_aap$'
       - '^rht\.dynolabs_common$'
+      - '^dle\.components$'
+      - '^workstation-vm$'
+      - '^flamel$'
       - '^AU.*$'
       - '^DO.*$'
   register: query_personal_and_rh_repos
 
-- name: Show query_personal_and_rh_repos
-  ansible.builtin.debug:
-    var: query_personal_and_rh_repos
+- name: Set found_repos
+  when:
+    - query_personal_and_rh_repos['matched'] is defined
+    - query_personal_and_rh_repos['matched'] > 0
+  ansible.builtin.set_fact:
+    found_repos: >-
+      {{ query_personal_and_rh_repos['files'] | map(attribute='path') }}

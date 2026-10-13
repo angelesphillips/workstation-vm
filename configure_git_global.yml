@@ -1,0 +1,24 @@
+---
+# Sample command from this directory with the `ansible-playbook` command:
+# ansible-playbook configure_git_global.yml --ask-vault-pass
+# Sample command from this directory with the `ansible-navigator` command:
+# ansible-navigator run configure_git_global.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
+- name: Configure Git (globally) for basic course development
+  hosts: workstation
+  become: true
+  vars_files:
+    - vars.yml
+  vars:
+    the_user: student
+  tasks:
+    - name: >-
+        Configure global Git settings in file: ~/.gitconfig
+      ansible.builtin.command:
+        cmd: >-
+          git config --global --replace-all
+          {{ item['setting'] }} {{ item['value'] }}
+      changed_when: false
+      loop: "{{ git_config }}"
+      loop_control:
+        label: >-
+          Configuring setting: {{ item['setting'] }}

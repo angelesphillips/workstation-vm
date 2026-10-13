@@ -1,9 +1,0 @@
----
-- name: Find repos
-  hosts: localhost
-  gather_facts: false
-  vars:
-    the_user: student
-  tasks:
-    - name: Include tasks/find_repos.yml
-      ansible.builtin.include_tasks: tasks/find_repos.yml

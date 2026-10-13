@@ -1,12 +1,15 @@
 ---
-- name: Configure settings for Git signing
+- name: >-
+    Configure Git for signing commits in repo: {{ found_repo_item }}
+  become: true
+  become_user: "{{ the_user }}"
   ansible.builtin.command:
-    chdir: "{{ git_repo_path }}"
+    chdir: "{{ found_repo_item }}"
     cmd: >-
       git config --local
       {{ signing_item['setting'] }} {{ signing_item['value'] }}
   changed_when: false
-  loop: "{{ signing_config }}"
+  loop: "{{ git_signing_config }}"
   loop_control:
     loop_var: signing_item
     label: >-

@@ -101,10 +101,11 @@
             state: present
       tags: git
 
-- name: Configure Git
-  vars:
-    git_scope: global
-  ansible.builtin.import_playbook: configure_git.yml
+- name: Configure Git (globally) for basic course development
+  ansible.builtin.import_playbook: configure_git_global.yml
+
+- name: Configure Git for commit signing
+  ansible.builtin.import_playbook: configure_git_local.yml
 
 - name: Prep for installing collections
   ansible.builtin.import_playbook: prep_collections.yml
