@@ -1,0 +1,13 @@
+---
+- name: Configure settings for Git signing
+  ansible.builtin.command:
+    chdir: "{{ git_repo_path }}"
+    cmd: >-
+      git config --local
+      {{ signing_item['setting'] }} {{ signing_item['value'] }}
+  changed_when: false
+  loop: "{{ signing_config }}"
+  loop_control:
+    loop_var: signing_item
+    label: >-
+      Configuring setting: {{ signing_item['setting'] }}

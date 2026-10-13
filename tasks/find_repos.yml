@@ -1,0 +1,21 @@
+---
+- name: Find personal or Red Hat Git repositories
+  become: true
+  become_user: "{{ the_user }}"
+  ansible.builtin.find:
+    paths:
+      - /home/{{ the_user }}
+      - /home/{{ the_user }}/Curriculum
+    file_type: directory
+    recurse: false
+    use_regex: true
+    patterns:
+      - '^rht\.dynolabs_aap$'
+      - '^rht\.dynolabs_common$'
+      - '^AU.*$'
+      - '^DO.*$'
+  register: query_personal_and_rh_repos
+
+- name: Show query_personal_and_rh_repos
+  ansible.builtin.debug:
+    var: query_personal_and_rh_repos
