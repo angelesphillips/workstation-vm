@@ -17,16 +17,65 @@ sed -i '/_TOKEN/d' ~/.bashrc
 rm -f /run/user/1000/containers/auth.json
 
 # Display WARNING for new SSH connection
+# Notify only for connections that originate from the 172.25.250.0/24 network,
+# excluding the machine's own address (172.25.250.9). To avoid a storm of
+# windows when an application such as VS Code opens several parallel SSH
+# channels, notify only once per source IP while that IP stays connected. If an
+# IP disconnects and later reconnects, it is notified again.
 CURRENT_GNOME_SESSIONS=$(pgrep -u student gnome-session)
 if [ -n "${CURRENT_GNOME_SESSIONS}" ]
 then
-  CURRENT_REMOTE_CONNECTIONS="$(w --no-header --from | grep -v -e '^student[[:blank:]]\+:[[:digit:]]' -e '^student[[:blank:]]\+seat0')"
-  if [ -n "${CURRENT_REMOTE_CONNECTIONS}" ]
+  # State file tracking source IPs already notified. A single fixed path is
+  # shared across all login shells in the desktop session.
+  NOTIFIED_IPS_FILE="${XDG_RUNTIME_DIR:-/run/user/1000}/ssh-notified-ips"
+  touch "${NOTIFIED_IPS_FILE}"
+
+  # Build the list of qualifying source IPs that are currently connected. The
+  # last column of `w --from` is the source host/IP; local sessions (:0, seat0)
+  # are excluded.
+  CURRENT_REMOTE_IPS="$(w --no-header --from \
+    | grep -v -e '^student[[:blank:]]\+:[[:digit:]]' -e '^student[[:blank:]]\+seat0' \
+    | grep -o '172\.25\.250\.[[:digit:]]\{1,3\}' \
+    | grep -v -x '172.25.250.9' \
+    | sort -u)"
+
+  # Prune the state file to IPs that are still connected. An IP that has
+  # disconnected drops out, so a later reconnection notifies again.
+  if [ -n "${CURRENT_REMOTE_IPS}" ]
   then
-    ACTIVE_TERMINALS=$(ps -ef | grep " pts/" | awk '{print $6}' | sort -u)
-    REMOTE_USER=$(echo "${CURRENT_REMOTE_CONNECTIONS}" | grep sshd-session | awk '{print $1}')
-    REMOTE_TERMINAL=$(ps -ef | grep 'sshd-session: student@pts' | grep -v 'color=auto' | cut -d@ -f2)
-    REMOTE_IP=$(echo "${CURRENT_REMOTE_CONNECTIONS}" | grep sshd-session | grep -o "[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}\.[[:digit:]]\{1,3\}")
+    grep -xF -f <(echo "${CURRENT_REMOTE_IPS}") "${NOTIFIED_IPS_FILE}" \
+      > "${NOTIFIED_IPS_FILE}.tmp" 2>/dev/null
+    mv -f "${NOTIFIED_IPS_FILE}.tmp" "${NOTIFIED_IPS_FILE}"
+  else
+    : > "${NOTIFIED_IPS_FILE}"
+  fi
+
+  # Examine each remote (SSH) session individually.
+  w --no-header --from \
+    | grep -v -e '^student[[:blank:]]\+:[[:digit:]]' -e '^student[[:blank:]]\+seat0' \
+    | while read -r REMOTE_USER REMOTE_TERMINAL REMOTE_IP _REST
+  do
+    # Keep only sessions that have a dotted-quad source address.
+    case "${REMOTE_IP}" in
+      [0-9]*.[0-9]*.[0-9]*.[0-9]*) ;;
+      *) continue ;;
+    esac
+
+    # Restrict to the 172.25.250.0/24 network, excluding the machine itself.
+    case "${REMOTE_IP}" in
+      172.25.250.9) continue ;;
+      172.25.250.*) ;;
+      *) continue ;;
+    esac
+
+    # Skip source IPs already notified and still connected (the state file was
+    # pruned above to currently-connected IPs).
+    if grep -qxF "${REMOTE_IP}" "${NOTIFIED_IPS_FILE}"
+    then
+      continue
+    fi
+    echo "${REMOTE_IP}" >> "${NOTIFIED_IPS_FILE}"
+
 WARNING_MESSAGE="$(cat <<-END
 ===============================================================================
 The ${REMOTE_USER} user has connected to the ${REMOTE_TERMINAL} terminal from ${REMOTE_IP}.
@@ -46,5 +95,5 @@ END
         OLD_DISPLAY=${NEW_DISPLAY}
       fi
     done
-  fi
+  done
 fi
