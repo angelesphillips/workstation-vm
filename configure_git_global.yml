@@ -13,6 +13,8 @@
   tasks:
     - name: >-
         Configure global Git settings in file: ~/.gitconfig
+      become: true
+      become_user: "{{ the_user }}"
       ansible.builtin.command:
         cmd: >-
           git config --global --replace-all
