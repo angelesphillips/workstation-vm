@@ -29,10 +29,10 @@ tail -n +"$((SEEN + 1))" "${SPOOL_FILE}" 2>/dev/null \
 do
   [ -n "${REMOTE_IP}" ] || continue
   MESSAGE="===============================================================================
-The ${REMOTE_USER} user opened an SSH session from ${REMOTE_IP} at ${WHEN}.
+New SSH session: user ${REMOTE_USER} from ${REMOTE_IP} at ${WHEN}.
 
-Review active sessions:   w --from
-Terminate a session:     sudo pkill -KILL -t <terminal>
+Review sessions:  loginctl list-sessions  (or: w --from)
+Kill this source: sudo pkill -KILL -f \"sshd.*${REMOTE_IP}\"
 ==============================================================================="
   zenity --warning --timeout 300 \
     --title "WARNING: New SSH connection detected" \

@@ -3,13 +3,15 @@
 #
 # Invoked by PAM (pam_exec.so) on every SSH session open. Runs as root,
 # outside and before the connecting user's shell, so it cannot be bypassed
-# the way a .bash_profile hook can. Notifies about new connections through
-# two layers:
+# the way a .bash_profile hook can. On a qualifying connection it:
 #
-#   1. wall      - always-on terminal broadcast. Reaches you even when you
-#                  are connected over SSH with no graphical session.
-#   2. spool file - appended here, watched by a `systemd --user` .path unit
-#                  that pops a zenity window inside the live GNOME session.
+#   1. removes the personal SSH keys from the user's ~/.ssh directory, before
+#      the connecting shell starts, and
+#   2. notifies through two layers:
+#        - wall       - always-on terminal broadcast; reaches you even when
+#                       connected over SSH with no graphical session.
+#        - spool file - appended here, watched by a `systemd --user` .path
+#                       unit that pops a zenity window in the GNOME session.
 #
 # This script ALWAYS exits 0. It runs in the PAM session phase, so a failure
 # here must never block an SSH login.
@@ -30,11 +32,23 @@ esac
 REMOTE_USER="${PAM_USER:-unknown}"
 WHEN="$(date '+%Y-%m-%d %H:%M:%S')"
 
-WARNING_MESSAGE="===============================================================================
-The ${REMOTE_USER} user opened an SSH session from ${REMOTE_IP} at ${WHEN}.
+# Home directory of the connecting user (fall back to {{ the_user }}'s home).
+USER_HOME="$(getent passwd "${REMOTE_USER}" | cut -d: -f6)"
+[ -n "${USER_HOME}" ] || USER_HOME="/home/{{ the_user }}"
 
-To review active sessions:    w --from
-To terminate a session:      sudo pkill -KILL -t <terminal>
+# Remove personal SSH keys before the connecting shell can read them. The list
+# is the set of key names managed by the github_keys Ansible variable. When
+# github_keys is not defined (for example, token-based access), no keys are
+# removed here.
+{% for KEY_NAME in github_keys | default([]) | map(attribute='name') | list %}
+rm -f "${USER_HOME}/.ssh/{{ KEY_NAME }}" 2>/dev/null || true
+{% endfor %}
+
+WARNING_MESSAGE="===============================================================================
+New SSH session: user ${REMOTE_USER} from ${REMOTE_IP} at ${WHEN}.
+
+Review sessions:  loginctl list-sessions  (or: w --from)
+Kill this source: sudo pkill -KILL -f \"sshd.*${REMOTE_IP}\"
 ==============================================================================="
 
 # Layer 1: broadcast to all terminals. Covers the SSH-only, no-GUI case.
