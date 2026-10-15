@@ -55,8 +55,8 @@ do
   MESSAGE="===============================================================================
 New SSH session: user ${REMOTE_USER} from ${REMOTE_IP} at ${WHEN}.
 
-Click OK to terminate every session from ${REMOTE_IP}.
-Click Cancel to allow the connection.
+Click 'Terminate ${REMOTE_IP}' to end every session from that address.
+Click 'Ignore' to allow the connection.
 ==============================================================================="
   if zenity --question --timeout 300 \
        --title "WARNING: New SSH connection detected" \
