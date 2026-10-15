@@ -1,0 +1,7 @@
+[Unit]
+# {{ ansible_managed }}
+Description=Show a desktop warning for new SSH connections
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/ssh-connection-zenity.sh

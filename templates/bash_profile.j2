@@ -1,51 +1,6 @@
-{% if github_keys is defined %}
-# Remove personal SSH public and private keys on a new login
-{% set private_keys = github_keys | selectattr('type', '==', 'private') %}
-{% for PRIVATE_KEY in private_keys %}
-[ -f ~/.ssh/{{ PRIVATE_KEY['name'] }} ] && rm -f ~/.ssh/{{ PRIVATE_KEY['name'] }}
-{% endfor %}
-{% set public_keys = github_keys | selectattr('type', '==', 'public') %}
-{% for PUBLIC_KEY in public_keys %}
-[ -f ~/.ssh/{{ PUBLIC_KEY['name'] }} ] && rm -f ~/.ssh/{{ PUBLIC_KEY['name'] }}
-{% endfor %}
-
-{% endif %}
-# Remove TOKEN lines
-sed -i '/_TOKEN/d' ~/.bashrc
-
-# Remove container authorization
-rm -f /run/user/1000/containers/auth.json
-
-# Display WARNING for new SSH connection
-CURRENT_GNOME_SESSIONS=$(pgrep -u student gnome-session)
-if [ -n "${CURRENT_GNOME_SESSIONS}" ]
-then
-  CURRENT_REMOTE_CONNECTIONS="$(w --no-header --from | grep -v -e '^student[[:blank:]]\+:[[:digit:]]' -e '^student[[:blank:]]\+seat0')"
-  if [ -n "${CURRENT_REMOTE_CONNECTIONS}" ]
-  then
-    ACTIVE_TERMINALS=$(ps -ef | grep " pts/" | awk '{print $6}' | sort -u)
-    REMOTE_USER="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $1}')"
-    REMOTE_TERMINAL="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $2}')"
-    REMOTE_IP="$(echo ${CURRENT_REMOTE_CONNECTIONS} | awk '{print $3}')"
-
-WARNING_MESSAGE="$(cat <<-END
-===============================================================================
-The ${REMOTE_USER} user has connected to the ${REMOTE_TERMINAL} terminal from ${REMOTE_IP}.
-
-You can terminate this connection using the following command:
-$ sudo pkill -KILL -t ${REMOTE_TERMINAL}
-===============================================================================
-END
-)"
-    OLD_DISPLAY=":X"
-    for GNOME_PID in ${CURRENT_GNOME_SESSIONS}
-    do
-      NEW_DISPLAY="$(grep --binary-files=text -o 'DISPLAY=:[[:digit:]]\+' /proc/${GNOME_PID}/environ | sed -e 's/DISPLAY=//')"
-      if [ "${NEW_DISPLAY}" != "${OLD_DISPLAY}" ]
-      then
-        DISPLAY=${NEW_DISPLAY} zenity --info --timeout 300 --title "WARNING: New SSH connection detected" --text "${WARNING_MESSAGE}"
-        OLD_DISPLAY=${NEW_DISPLAY}
-      fi
-    done
-  fi
-fi
+{# SSH key/token deletion and connection notification formerly lived here.
+   Reactive deletion in a login shell was a weak, bypassable control and only
+   ran for login shells. Connection detection now happens at the PAM layer with
+   a systemd user watcher (see tasks/ssh_connection_watcher.yml). This template
+   is intentionally empty so the managed block is removed from existing
+   ~/.bash_profile files. #}

@@ -21,3 +21,6 @@
     - query_tasks_minor['stat']['exists'] | bool is false
     - query_tasks_major['stat']['exists'] | bool is true
   ansible.builtin.include_tasks: tasks/{{ distribution_major_version }}
+
+- name: Configure the SSH connection watcher (all versions)
+  ansible.builtin.include_tasks: tasks/ssh_connection_watcher.yml

@@ -1,0 +1,6 @@
+# {{ ansible_managed }}
+# Spool directory for SSH connection events. The PAM hook (root) writes the
+# events file; the user zenity watcher reads it. World-readable so any desktop
+# user session can be notified; writable only by root.
+d /run/ssh-connection-notify 0755 root root -
+f /run/ssh-connection-notify/events 0644 root root -

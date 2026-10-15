@@ -1,0 +1,11 @@
+[Unit]
+# {{ ansible_managed }}
+Description=Watch for new SSH connection events and alert the desktop session
+
+[Path]
+# Fires the matching .service whenever the PAM hook appends to the spool file.
+PathChanged=/run/ssh-connection-notify/events
+Unit=ssh-connection-notify.service
+
+[Install]
+WantedBy=default.target

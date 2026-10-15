@@ -1,0 +1,54 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# Invoked by PAM (pam_exec.so) on every SSH session open. Runs as root,
+# outside and before the connecting user's shell, so it cannot be bypassed
+# the way a .bash_profile hook can. Notifies about new connections through
+# two layers:
+#
+#   1. wall      - always-on terminal broadcast. Reaches you even when you
+#                  are connected over SSH with no graphical session.
+#   2. spool file - appended here, watched by a `systemd --user` .path unit
+#                  that pops a zenity window inside the live GNOME session.
+#
+# This script ALWAYS exits 0. It runs in the PAM session phase, so a failure
+# here must never block an SSH login.
+
+# Only act when PAM is opening a session. Other phases (close, auth) are
+# invoked too; ignore them.
+[ "${PAM_TYPE}" = "open_session" ] || exit 0
+
+# Restrict to connections from the classroom network, excluding the machine's
+# own address. Mirrors the policy previously used in .bash_profile.
+REMOTE_IP="${PAM_RHOST}"
+case "${REMOTE_IP}" in
+  172.25.250.9) exit 0 ;;
+  172.25.250.*) ;;
+  *) exit 0 ;;
+esac
+
+REMOTE_USER="${PAM_USER:-unknown}"
+WHEN="$(date '+%Y-%m-%d %H:%M:%S')"
+
+WARNING_MESSAGE="===============================================================================
+The ${REMOTE_USER} user opened an SSH session from ${REMOTE_IP} at ${WHEN}.
+
+To review active sessions:    w --from
+To terminate a session:      sudo pkill -KILL -t <terminal>
+==============================================================================="
+
+# Layer 1: broadcast to all terminals. Covers the SSH-only, no-GUI case.
+# Fail-open: ignore any error so a missing `wall` cannot break login.
+echo "${WARNING_MESSAGE}" | wall 2>/dev/null || true
+
+# Layer 2: record the event for the desktop watcher. The spool directory is
+# created by systemd-tmpfiles (see ssh-connection-notify tmpfiles config).
+SPOOL_DIR="/run/ssh-connection-notify"
+SPOOL_FILE="${SPOOL_DIR}/events"
+if [ -d "${SPOOL_DIR}" ]
+then
+  printf '%s\t%s\t%s\n' "${WHEN}" "${REMOTE_USER}" "${REMOTE_IP}" \
+    >> "${SPOOL_FILE}" 2>/dev/null || true
+fi
+
+exit 0

@@ -1,0 +1,106 @@
+---
+# Detect new SSH connections at the authentication layer (PAM) instead of from
+# ~/.bash_profile, which only ran for login shells and could be bypassed. A
+# pam_exec hook fires on every SSH session open and notifies through two
+# layers: a `wall` broadcast (reaches SSH-only sessions with no GUI) and a
+# spool file watched by a `systemd --user` unit that pops a zenity window when
+# a GNOME session is live.
+
+- name: Look up the target user's UID
+  ansible.builtin.command: id -u {{ the_user }}
+  register: target_user_id
+  changed_when: false
+
+- name: Set the user UID fact
+  ansible.builtin.set_fact:
+    user_uid: "{{ target_user_id['stdout'] | trim }}"
+
+- name: Install the PAM-invoked SSH connection notifier
+  ansible.builtin.template:
+    src: templates/ssh-connection-notify.sh.j2
+    dest: /usr/local/sbin/ssh-connection-notify.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the desktop zenity dispatcher
+  ansible.builtin.template:
+    src: templates/ssh-connection-zenity.sh.j2
+    dest: /usr/local/bin/ssh-connection-zenity.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create the spool directory tmpfiles configuration
+  ansible.builtin.template:
+    src: templates/ssh-connection-notify.tmpfiles.j2
+    dest: /etc/tmpfiles.d/ssh-connection-notify.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Create the spool directory now (do not wait for a reboot)
+  ansible.builtin.command: systemd-tmpfiles --create /etc/tmpfiles.d/ssh-connection-notify.conf
+  changed_when: false
+
+- name: Hook the notifier into the sshd PAM session phase
+  # Fail-open script in the session phase: a notifier failure can never block
+  # an SSH login. Placed in /etc/pam.d/sshd so it applies only to SSH.
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/sshd
+    line: "session    optional     pam_exec.so /usr/local/sbin/ssh-connection-notify.sh"
+    insertafter: EOF
+    state: present
+    validate: "/bin/true %s"
+
+- name: Create the user systemd directory
+  ansible.builtin.file:
+    path: ~{{ the_user }}/.config/systemd/user
+    state: directory
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0755"
+
+- name: Install the user .service unit
+  ansible.builtin.template:
+    src: templates/ssh-connection-notify.service.j2
+    dest: ~{{ the_user }}/.config/systemd/user/ssh-connection-notify.service
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+  register: notify_service_unit
+
+- name: Install the user .path unit
+  ansible.builtin.template:
+    src: templates/ssh-connection-notify.path.j2
+    dest: ~{{ the_user }}/.config/systemd/user/ssh-connection-notify.path
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+  register: notify_path_unit
+
+- name: Enable lingering so the user path unit runs without an active login
+  ansible.builtin.command: loginctl enable-linger {{ the_user }}
+  args:
+    creates: /var/lib/systemd/linger/{{ the_user }}
+
+- name: Reload the user systemd manager
+  become: true
+  become_user: "{{ the_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ user_uid }}"
+  ansible.builtin.systemd:
+    scope: user
+    daemon_reload: true
+  when: notify_service_unit is changed or notify_path_unit is changed
+
+- name: Enable and start the SSH connection watcher path unit
+  become: true
+  become_user: "{{ the_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ user_uid }}"
+  ansible.builtin.systemd:
+    name: ssh-connection-notify.path
+    scope: user
+    enabled: true
+    state: started

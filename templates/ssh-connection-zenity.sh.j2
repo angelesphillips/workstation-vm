@@ -1,0 +1,43 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# Started by the ssh-connection-notify.path user unit whenever the PAM hook
+# appends to the spool file. Runs inside the live GNOME session, so DISPLAY
+# and XDG_RUNTIME_DIR come from the user systemd environment and no /proc
+# scraping is needed. Drains any new spool lines and shows one zenity window
+# per connection.
+
+SPOOL_FILE="/run/ssh-connection-notify/events"
+# Per-user cursor tracking how many spool lines have already been shown.
+CURSOR_FILE="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-connection-notify.cursor"
+
+[ -f "${SPOOL_FILE}" ] || exit 0
+
+SEEN=0
+[ -f "${CURSOR_FILE}" ] && SEEN="$(cat "${CURSOR_FILE}" 2>/dev/null || echo 0)"
+case "${SEEN}" in ''|*[!0-9]*) SEEN=0 ;; esac
+
+TOTAL="$(wc -l < "${SPOOL_FILE}" 2>/dev/null || echo 0)"
+case "${TOTAL}" in ''|*[!0-9]*) TOTAL=0 ;; esac
+
+# If the spool was truncated/rotated, start over from the top.
+[ "${SEEN}" -gt "${TOTAL}" ] && SEEN=0
+
+# Show only lines added since the last run.
+tail -n +"$((SEEN + 1))" "${SPOOL_FILE}" 2>/dev/null \
+  | while IFS="$(printf '\t')" read -r WHEN REMOTE_USER REMOTE_IP
+do
+  [ -n "${REMOTE_IP}" ] || continue
+  MESSAGE="===============================================================================
+The ${REMOTE_USER} user opened an SSH session from ${REMOTE_IP} at ${WHEN}.
+
+Review active sessions:   w --from
+Terminate a session:     sudo pkill -KILL -t <terminal>
+==============================================================================="
+  zenity --warning --timeout 300 \
+    --title "WARNING: New SSH connection detected" \
+    --text "${MESSAGE}" 2>/dev/null || true
+done
+
+echo "${TOTAL}" > "${CURSOR_FILE}" 2>/dev/null || true
+exit 0

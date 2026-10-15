@@ -4,3 +4,4 @@ additional_packages:
   - gnome-extensions-app
   - python3-psutil
   - libcanberra-gtk2
+  - zenity
