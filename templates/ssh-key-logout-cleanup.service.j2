@@ -1,0 +1,19 @@
+[Unit]
+# {{ ansible_managed }}
+# Removes the personal SSH keys on graphical logout. Bound to
+# graphical-session.target: on logout the target stops and ExecStop runs the
+# shared removal script in the user's own (unconfined) SELinux domain. gdm's
+# own logout hooks run as the confined xdm_t domain, which SELinux forbids from
+# unlinking ssh_home_t files, so they cannot do this.
+Description=Remove personal SSH keys on graphical logout
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/local/sbin/remove-personal-ssh-keys.sh
+
+[Install]
+WantedBy=graphical-session.target

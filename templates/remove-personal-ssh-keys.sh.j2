@@ -4,7 +4,7 @@
 # Removes {{ the_user }}'s personal SSH keys from ~/.ssh. Single source of
 # truth for key deletion, called from:
 #   - the sshd PAM hook (ssh-connection-notify.sh) on session open and close,
-#   - the gdm PostSession script, on graphical logout,
+#   - the ssh-key-logout-cleanup user service (ExecStop), on graphical logout,
 #   - the ssh-key-cleanup.service, on reboot/shutdown.
 #
 # The key list is the set of names managed by the github_keys Ansible

@@ -31,40 +31,57 @@
     group: root
     mode: "0755"
 
-- name: Install the PAM close-session key-removal wrapper for graphical logout
-  ansible.builtin.template:
-    src: templates/remove-personal-ssh-keys-on-close.sh.j2
-    dest: /usr/local/sbin/remove-personal-ssh-keys-on-close.sh
-    owner: root
-    group: root
-    mode: "0755"
+# Graphical logout key removal.
+#
+# gdm's logout hooks (pam_exec on gdm-password/gdm-autologin, and the
+# PostSession script) all run in the confined SELinux domain xdm_t, which is
+# not permitted to unlink files in ~/.ssh (ssh_home_t) -- the rm fails with
+# "Permission denied" even as root. Instead, bind a `systemd --user` oneshot to
+# graphical-session.target: on logout the target stops and ExecStop runs the
+# removal in the user's unconfined domain, with no SELinux policy change.
 
-- name: Remove personal SSH keys on graphical logout (gdm PAM close)
-  # The gdm PostSession hook does not run for Wayland sessions, so remove keys
-  # via a pam_exec close_session line on the graphical login stacks instead.
-  # Cover both gdm-password (manual login) and gdm-autologin (this VM uses
-  # AutomaticLogin, which runs the gdm-autologin service, not gdm-password).
-  # Neither file is authselect-generated, so both are safe to edit.
+- name: Remove obsolete gdm pam_exec key-removal lines (superseded by user unit)
   ansible.builtin.lineinfile:
     path: "/etc/pam.d/{{ item }}"
-    line: "session    optional     pam_exec.so /usr/local/sbin/remove-personal-ssh-keys-on-close.sh"
-    insertafter: EOF
-    state: present
-    validate: "/bin/true %s"
+    regexp: "remove-personal-ssh-keys-on-close"
+    state: absent
   loop:
     - gdm-password
     - gdm-autologin
 
-- name: Reset the gdm PostSession hook to stock (superseded by the PAM close)
-  ansible.builtin.copy:
-    dest: /etc/gdm/PostSession/Default
-    content: |
-      #!/bin/sh
+- name: Remove the obsolete PAM close-session wrapper
+  ansible.builtin.file:
+    path: /usr/local/sbin/remove-personal-ssh-keys-on-close.sh
+    state: absent
 
-      exit 0
-    owner: root
-    group: root
+- name: Create the user systemd directory
+  ansible.builtin.file:
+    path: ~{{ the_user }}/.config/systemd/user
+    state: directory
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
     mode: "0755"
+
+- name: Install the graphical-logout user service
+  ansible.builtin.template:
+    src: templates/ssh-key-logout-cleanup.service.j2
+    dest: ~{{ the_user }}/.config/systemd/user/ssh-key-logout-cleanup.service
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+  register: logout_cleanup_unit
+
+- name: Enable the graphical-logout user service
+  become: true
+  become_user: "{{ the_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ user_uid }}"
+  ansible.builtin.systemd:
+    name: ssh-key-logout-cleanup.service
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ logout_cleanup_unit is changed }}"
 
 - name: Install the shutdown/reboot SSH key cleanup service
   ansible.builtin.template:
@@ -120,14 +137,6 @@
     insertafter: EOF
     state: present
     validate: "/bin/true %s"
-
-- name: Create the user systemd directory
-  ansible.builtin.file:
-    path: ~{{ the_user }}/.config/systemd/user
-    state: directory
-    owner: "{{ the_user }}"
-    group: "{{ the_user }}"
-    mode: "0755"
 
 - name: Install the user .service unit
   ansible.builtin.template:
