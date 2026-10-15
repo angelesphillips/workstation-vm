@@ -39,16 +39,21 @@
     group: root
     mode: "0755"
 
-- name: Remove personal SSH keys on graphical logout (gdm-password PAM close)
+- name: Remove personal SSH keys on graphical logout (gdm PAM close)
   # The gdm PostSession hook does not run for Wayland sessions, so remove keys
-  # via a pam_exec close_session line on the graphical login stack instead.
-  # /etc/pam.d/gdm-password is not authselect-generated, so it is safe to edit.
+  # via a pam_exec close_session line on the graphical login stacks instead.
+  # Cover both gdm-password (manual login) and gdm-autologin (this VM uses
+  # AutomaticLogin, which runs the gdm-autologin service, not gdm-password).
+  # Neither file is authselect-generated, so both are safe to edit.
   ansible.builtin.lineinfile:
-    path: /etc/pam.d/gdm-password
+    path: "/etc/pam.d/{{ item }}"
     line: "session    optional     pam_exec.so /usr/local/sbin/remove-personal-ssh-keys-on-close.sh"
     insertafter: EOF
     state: present
     validate: "/bin/true %s"
+  loop:
+    - gdm-password
+    - gdm-autologin
 
 - name: Reset the gdm PostSession hook to stock (superseded by the PAM close)
   ansible.builtin.copy:
