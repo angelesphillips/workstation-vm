@@ -1,0 +1,14 @@
+[Unit]
+# {{ ansible_managed }}
+# Removes the personal SSH keys when the GNOME screen locks. Runs the lock
+# watcher for the lifetime of the graphical session.
+Description=Remove personal SSH keys on screen lock
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+ExecStart=/usr/local/bin/ssh-key-lock-watch.sh
+Restart=on-failure
+
+[Install]
+WantedBy=graphical-session.target

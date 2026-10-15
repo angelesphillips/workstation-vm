@@ -83,6 +83,35 @@
     state: started
     daemon_reload: "{{ logout_cleanup_unit is changed }}"
 
+- name: Install the screen-lock key-removal watcher
+  ansible.builtin.template:
+    src: templates/ssh-key-lock-watch.sh.j2
+    dest: /usr/local/bin/ssh-key-lock-watch.sh
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the screen-lock user service
+  ansible.builtin.template:
+    src: templates/ssh-key-lock-cleanup.service.j2
+    dest: ~{{ the_user }}/.config/systemd/user/ssh-key-lock-cleanup.service
+    owner: "{{ the_user }}"
+    group: "{{ the_user }}"
+    mode: "0644"
+  register: lock_cleanup_unit
+
+- name: Enable the screen-lock user service
+  become: true
+  become_user: "{{ the_user }}"
+  environment:
+    XDG_RUNTIME_DIR: "/run/user/{{ user_uid }}"
+  ansible.builtin.systemd:
+    name: ssh-key-lock-cleanup.service
+    scope: user
+    enabled: true
+    state: started
+    daemon_reload: "{{ lock_cleanup_unit is changed }}"
+
 - name: Install the shutdown/reboot SSH key cleanup service
   ansible.builtin.template:
     src: templates/ssh-key-cleanup.service.j2

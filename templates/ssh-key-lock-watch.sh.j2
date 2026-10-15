@@ -1,0 +1,22 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# Watches for GNOME screen lock and removes the personal SSH keys when the
+# screen locks. Started by the ssh-key-lock-cleanup user service inside the
+# graphical session, so the removal runs in the user's own (unconfined) SELinux
+# domain -- gdm's xdm_t domain cannot unlink ssh_home_t files in ~/.ssh.
+#
+# org.gnome.ScreenSaver emits ActiveChanged(true) on lock and (false) on
+# unlock. Keys are removed on lock only; regenerate them the normal way (the
+# `mykeys` alias runs sk.yml) after unlocking.
+
+gdbus monitor --session --dest org.gnome.ScreenSaver --object-path /org/gnome/ScreenSaver 2>/dev/null \
+  | while read -r line
+    do
+      case "${line}" in
+        *ActiveChanged*true*)
+          /usr/local/sbin/remove-personal-ssh-keys.sh
+          logger -t ssh-key-lock "screen locked -> removed personal SSH keys"
+          ;;
+      esac
+    done
