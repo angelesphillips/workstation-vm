@@ -1,0 +1,12 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# PAM close-session wrapper around the shared key-removal script, for the
+# graphical login stack (/etc/pam.d/gdm-password). pam_exec runs this on both
+# session open and close; only act on close so keys are not deleted the moment
+# the desktop session starts. Always exits 0 so it can never block logout.
+
+[ "${PAM_TYPE}" = "close_session" ] || exit 0
+
+/usr/local/sbin/remove-personal-ssh-keys.sh 2>/dev/null || true
+exit 0
