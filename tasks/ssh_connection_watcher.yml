@@ -43,6 +43,15 @@
   ansible.builtin.command: systemd-tmpfiles --create /etc/tmpfiles.d/ssh-connection-notify.conf
   changed_when: false
 
+- name: Allow the user to terminate sessions without a password (for the dialog)
+  ansible.builtin.template:
+    src: templates/ssh-connection-notify.sudoers.j2
+    dest: /etc/sudoers.d/ssh-connection-notify
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "/usr/sbin/visudo -cf %s"
+
 - name: Hook the notifier into the sshd PAM session phase
   # Fail-open script in the session phase: a notifier failure can never block
   # an SSH login. Placed in /etc/pam.d/sshd so it applies only to SSH.

@@ -1,24 +1,40 @@
 #!/bin/bash
 # {{ ansible_managed }}
 #
-# Invoked by PAM (pam_exec.so) on every SSH session open. Runs as root,
-# outside and before the connecting user's shell, so it cannot be bypassed
-# the way a .bash_profile hook can. On a qualifying connection it:
+# Invoked by PAM (pam_exec.so) for SSH session open and close. Runs as root,
+# outside and before the connecting user's shell, so it cannot be bypassed the
+# way a .bash_profile hook can.
 #
+# On session OPEN, for a qualifying connection it:
 #   1. removes the personal SSH keys from the user's ~/.ssh directory, before
 #      the connecting shell starts, and
 #   2. notifies through two layers:
 #        - wall       - always-on terminal broadcast; reaches you even when
 #                       connected over SSH with no graphical session.
 #        - spool file - appended here, watched by a `systemd --user` .path
-#                       unit that pops a zenity window in the GNOME session.
+#                       unit that pops a zenity dialog in the GNOME session.
+#
+# On session CLOSE, it removes the personal SSH keys again, so keys never
+# linger after a session ends.
 #
 # This script ALWAYS exits 0. It runs in the PAM session phase, so a failure
 # here must never block an SSH login.
 
-# Only act when PAM is opening a session. Other phases (close, auth) are
-# invoked too; ignore them.
-[ "${PAM_TYPE}" = "open_session" ] || exit 0
+REMOTE_USER="${PAM_USER:-unknown}"
+
+# Home directory of the connecting user (fall back to {{ the_user }}'s home).
+USER_HOME="$(getent passwd "${REMOTE_USER}" | cut -d: -f6)"
+[ -n "${USER_HOME}" ] || USER_HOME="/home/{{ the_user }}"
+
+# Remove personal SSH keys. The list is the set of key names managed by the
+# github_keys Ansible variable. When github_keys is not defined (for example,
+# token-based access), no keys are removed.
+remove_personal_keys() {
+{% for KEY_NAME in github_keys | default([]) | map(attribute='name') | list %}
+  rm -f "${USER_HOME}/.ssh/{{ KEY_NAME }}" 2>/dev/null || true
+{% endfor %}
+  :
+}
 
 # Restrict to connections from the classroom network, excluding the machine's
 # own address. Mirrors the policy previously used in .bash_profile.
@@ -29,26 +45,27 @@ case "${REMOTE_IP}" in
   *) exit 0 ;;
 esac
 
-REMOTE_USER="${PAM_USER:-unknown}"
+case "${PAM_TYPE}" in
+  close_session)
+    # Keys are also stripped on logout, so nothing lingers after a session.
+    remove_personal_keys
+    exit 0
+    ;;
+  open_session) ;;
+  *) exit 0 ;;
+esac
+
 WHEN="$(date '+%Y-%m-%d %H:%M:%S')"
 
-# Home directory of the connecting user (fall back to {{ the_user }}'s home).
-USER_HOME="$(getent passwd "${REMOTE_USER}" | cut -d: -f6)"
-[ -n "${USER_HOME}" ] || USER_HOME="/home/{{ the_user }}"
-
-# Remove personal SSH keys before the connecting shell can read them. The list
-# is the set of key names managed by the github_keys Ansible variable. When
-# github_keys is not defined (for example, token-based access), no keys are
-# removed here.
-{% for KEY_NAME in github_keys | default([]) | map(attribute='name') | list %}
-rm -f "${USER_HOME}/.ssh/{{ KEY_NAME }}" 2>/dev/null || true
-{% endfor %}
+# Delete keys before the connecting shell can read them.
+remove_personal_keys
 
 WARNING_MESSAGE="===============================================================================
 New SSH session: user ${REMOTE_USER} from ${REMOTE_IP} at ${WHEN}.
 
-Review sessions:  loginctl list-sessions  (or: w --from)
-Kill this source: sudo pkill -KILL -f \"sshd.*${REMOTE_IP}\"
+To kill it, click 'Terminate' in the desktop dialog, or run:
+  sudo loginctl list-sessions   # find the session for ${REMOTE_IP}
+  sudo loginctl terminate-session <session-id>
 ==============================================================================="
 
 # Layer 1: broadcast to all terminals. Covers the SSH-only, no-GUI case.

@@ -4,14 +4,35 @@
 # Started by the ssh-connection-notify.path user unit whenever the PAM hook
 # appends to the spool file. Runs inside the live GNOME session, so DISPLAY
 # and XDG_RUNTIME_DIR come from the user systemd environment and no /proc
-# scraping is needed. Drains any new spool lines and shows one zenity window
-# per connection.
+# scraping is needed. Drains any new spool lines and shows one zenity dialog
+# per connection with two choices:
+#
+#   OK     -> terminate the SSH session(s) from that source IP
+#   Cancel -> ignore the connection
+#
+# Killing uses `loginctl terminate-session` resolved from each session's
+# RemoteHost. `pkill -f` cannot be used: the source IP does not appear in the
+# sshd command line, so matching on it hits the wrong process (for example
+# this very dialog).
 
 SPOOL_FILE="/run/ssh-connection-notify/events"
 # Per-user cursor tracking how many spool lines have already been shown.
 CURSOR_FILE="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/ssh-connection-notify.cursor"
 
 [ -f "${SPOOL_FILE}" ] || exit 0
+
+# Terminate every login session whose RemoteHost matches the given IP.
+terminate_sessions_from_ip() {
+  local ip="$1" s rh
+  for s in $(loginctl list-sessions --no-legend | awk '{print $1}')
+  do
+    rh="$(loginctl show-session "${s}" -p RemoteHost --value 2>/dev/null)"
+    if [ "${rh}" = "${ip}" ]
+    then
+      sudo loginctl terminate-session "${s}" 2>/dev/null || true
+    fi
+  done
+}
 
 SEEN=0
 [ -f "${CURSOR_FILE}" ] && SEEN="$(cat "${CURSOR_FILE}" 2>/dev/null || echo 0)"
@@ -23,6 +44,9 @@ case "${TOTAL}" in ''|*[!0-9]*) TOTAL=0 ;; esac
 # If the spool was truncated/rotated, start over from the top.
 [ "${SEEN}" -gt "${TOTAL}" ] && SEEN=0
 
+# Advance the cursor now so parallel runs do not show the same line twice.
+echo "${TOTAL}" > "${CURSOR_FILE}" 2>/dev/null || true
+
 # Show only lines added since the last run.
 tail -n +"$((SEEN + 1))" "${SPOOL_FILE}" 2>/dev/null \
   | while IFS="$(printf '\t')" read -r WHEN REMOTE_USER REMOTE_IP
@@ -31,13 +55,19 @@ do
   MESSAGE="===============================================================================
 New SSH session: user ${REMOTE_USER} from ${REMOTE_IP} at ${WHEN}.
 
-Review sessions:  loginctl list-sessions  (or: w --from)
-Kill this source: sudo pkill -KILL -f \"sshd.*${REMOTE_IP}\"
+Click OK to terminate every session from ${REMOTE_IP}.
+Click Cancel to allow the connection.
 ==============================================================================="
-  zenity --warning --timeout 300 \
-    --title "WARNING: New SSH connection detected" \
-    --text "${MESSAGE}" 2>/dev/null || true
+  if zenity --question --timeout 300 \
+       --title "WARNING: New SSH connection detected" \
+       --ok-label "Terminate ${REMOTE_IP}" \
+       --cancel-label "Ignore" \
+       --text "${MESSAGE}" 2>/dev/null
+  then
+    # Exit status 0: the user chose to terminate.
+    terminate_sessions_from_ip "${REMOTE_IP}"
+  fi
+  # Exit status 1 (Cancel) or 5 (timeout): leave the connection alone.
 done
 
-echo "${TOTAL}" > "${CURSOR_FILE}" 2>/dev/null || true
 exit 0

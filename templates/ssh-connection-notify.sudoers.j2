@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+# Allow the desktop zenity dispatcher to terminate SSH login sessions without a
+# password prompt, so the "Terminate" button works from the non-interactive
+# systemd --user service. Scoped to loginctl terminate-session only.
+{{ the_user }} ALL=(root) NOPASSWD: /usr/bin/loginctl terminate-session *
