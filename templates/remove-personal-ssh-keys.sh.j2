@@ -1,0 +1,20 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# Removes {{ the_user }}'s personal SSH keys from ~/.ssh. Single source of
+# truth for key deletion, called from:
+#   - the sshd PAM hook (ssh-connection-notify.sh) on session open and close,
+#   - the gdm PostSession script, on graphical logout,
+#   - the ssh-key-cleanup.service, on reboot/shutdown.
+#
+# The key list is the set of names managed by the github_keys Ansible
+# variable. When github_keys is not defined, nothing is removed. Always
+# exits 0 so it can never block a login, logout, or shutdown.
+
+SSH_DIR="/home/{{ the_user }}/.ssh"
+
+{% for KEY_NAME in github_keys | default([]) | map(attribute='name') | list %}
+rm -f "${SSH_DIR}/{{ KEY_NAME }}" 2>/dev/null || true
+{% endfor %}
+
+exit 0

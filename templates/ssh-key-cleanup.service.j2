@@ -1,0 +1,19 @@
+[Unit]
+# {{ ansible_managed }}
+Description=Remove personal SSH keys on shutdown and reboot
+# Run late in shutdown, after normal services are gone. DefaultDependencies=no
+# plus the Conflicts/Before on shutdown.target make this a shutdown-time unit.
+DefaultDependencies=no
+Before=shutdown.target reboot.target halt.target
+Conflicts=reboot.target halt.target shutdown.target
+
+[Service]
+Type=oneshot
+# RemainAfterExit so the unit is considered "active" after start; the real
+# work runs from ExecStop as the system goes down.
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/local/sbin/remove-personal-ssh-keys.sh
+
+[Install]
+WantedBy=multi-user.target

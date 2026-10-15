@@ -22,18 +22,10 @@
 
 REMOTE_USER="${PAM_USER:-unknown}"
 
-# Home directory of the connecting user (fall back to {{ the_user }}'s home).
-USER_HOME="$(getent passwd "${REMOTE_USER}" | cut -d: -f6)"
-[ -n "${USER_HOME}" ] || USER_HOME="/home/{{ the_user }}"
-
-# Remove personal SSH keys. The list is the set of key names managed by the
-# github_keys Ansible variable. When github_keys is not defined (for example,
-# token-based access), no keys are removed.
+# Remove personal SSH keys using the shared helper (single source of truth,
+# also called from the gdm PostSession script and the shutdown service).
 remove_personal_keys() {
-{% for KEY_NAME in github_keys | default([]) | map(attribute='name') | list %}
-  rm -f "${USER_HOME}/.ssh/{{ KEY_NAME }}" 2>/dev/null || true
-{% endfor %}
-  :
+  /usr/local/sbin/remove-personal-ssh-keys.sh 2>/dev/null || true
 }
 
 # Restrict to connections from the classroom network, excluding the machine's

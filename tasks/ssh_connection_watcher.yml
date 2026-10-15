@@ -15,6 +15,14 @@
   ansible.builtin.set_fact:
     user_uid: "{{ target_user_id['stdout'] | trim }}"
 
+- name: Install the shared personal-SSH-key removal script
+  ansible.builtin.template:
+    src: templates/remove-personal-ssh-keys.sh.j2
+    dest: /usr/local/sbin/remove-personal-ssh-keys.sh
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Install the PAM-invoked SSH connection notifier
   ansible.builtin.template:
     src: templates/ssh-connection-notify.sh.j2
@@ -22,6 +30,30 @@
     owner: root
     group: root
     mode: "0755"
+
+- name: Remove personal SSH keys on graphical logout (gdm PostSession)
+  ansible.builtin.template:
+    src: templates/gdm-postsession.j2
+    dest: /etc/gdm/PostSession/Default
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the shutdown/reboot SSH key cleanup service
+  ansible.builtin.template:
+    src: templates/ssh-key-cleanup.service.j2
+    dest: /etc/systemd/system/ssh-key-cleanup.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: key_cleanup_service
+
+- name: Enable the shutdown/reboot SSH key cleanup service
+  ansible.builtin.systemd:
+    name: ssh-key-cleanup.service
+    enabled: true
+    state: started
+    daemon_reload: "{{ key_cleanup_service is changed }}"
 
 - name: Install the desktop zenity dispatcher
   ansible.builtin.template:
