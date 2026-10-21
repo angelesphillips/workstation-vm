@@ -2,7 +2,7 @@
 # Sample command from this directory with the `ansible-playbook` command:
 # ansible-playbook configure_git_signing.yml --ask-vault-pass
 # Sample command from this directory with the `ansible-navigator` command:
-# ansible-navigator run configure_git_signing.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
+# ansible-navigator run configure_git_local.yml -i inventory-ee --mode stdout --pae false --ask-vault-pass
 - name: Configure Git for commit signing
   hosts: workstation
   become: true
@@ -10,10 +10,10 @@
     - vars.yml
   vars:
     the_user: student
+  tags: git_local
   tasks:
     - name: Include tasks/find_repos.yml
       ansible.builtin.include_tasks: tasks/find_repos.yml
-      tags: git
 
     - name: Include tasks/git_signing.yml
       vars:
@@ -32,7 +32,6 @@
             value: /home/{{ the_user }}/.ssh/{{ github_keys[0]['name'] }}.pub
           - setting: commit.gpgsign
             value: true
-      tags: git
       ansible.builtin.include_tasks: tasks/git_signing.yml
       loop: "{{ found_repos }}"
       loop_control:

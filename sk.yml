@@ -12,20 +12,22 @@
   vars_files:
     - vars.yml
   tasks:
-    - name: Git block
-      block:
-        - name: Create GitHub keys
-          ansible.builtin.copy:
-            content: "{{ item['data'] }}"
-            dest: ~{{ the_user }}/.ssh/{{ item['name'] }}
-            owner: "{{ the_user }}"
-            group: "{{ the_user }}"
-            mode: "{{ item['mode'] }}"
-            setype: ssh_home_t
-          loop: "{{ github_keys }}"
-          loop_control:
-            label: Creating the '~{{ the_user }}/.ssh/{{ item["name"] }}' file.
+    - name: Create SSH keys
+      tags: ssh_keys
+      ansible.builtin.copy:
+        content: "{{ item['data'] }}"
+        dest: ~{{ the_user }}/.ssh/{{ item['name'] }}
+        owner: "{{ the_user }}"
+        group: "{{ the_user }}"
+        mode: "{{ item['mode'] }}"
+        setype: ssh_home_t
+      loop: "{{ github_keys }}"
+      loop_control:
+        label: Creating the '~{{ the_user }}/.ssh/{{ item["name"] }}' file.
 
+    - name: SSH configuration block
+      tags: ssh_config
+      block:
         - name: Create ~{{ the_user }}/.ssh/config.d
           ansible.builtin.file:
             path: ~{{ the_user }}/.ssh/config.d
@@ -58,7 +60,7 @@
         - name: Update SSH configuration for bastion
           ansible.builtin.blockinfile:
             path: ~{{ the_user }}/.ssh/config.d/classroom.conf
-            marker: "# {mark} ANSIBLE MANAGED BLOCK GITHUB"
+            marker: "# {mark} ANSIBLE MANAGED BLOCK BASTION"
             block: |
               Host tools-na100bastion
                  Hostname bastion-tools-na100.dev.ole.redhat.com
@@ -99,14 +101,16 @@
             regexp: '^Host .$'
             line: "Host * !github.com"
             state: present
-      tags: git
 
 - name: Configure Git (globally) for basic course development
+  tags: git_global
   ansible.builtin.import_playbook: configure_git_global.yml
 
 - name: Configure Git for commit signing
+  tags: git_local
   ansible.builtin.import_playbook: configure_git_local.yml
 
 - name: Prep for installing collections
+  tags: prep_collections
   ansible.builtin.import_playbook: prep_collections.yml
 

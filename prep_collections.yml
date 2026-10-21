@@ -11,6 +11,7 @@
     the_user: student
   vars_files:
     - automation_hub_token.yml
+  tags: prep_collections
   tasks:
     - name: Fail if automation_hub_token is not defined
       when: automation_hub_token is not defined

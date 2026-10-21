@@ -10,9 +10,10 @@
     - vars.yml
   vars:
     the_user: student
+  tags: git_global
   tasks:
     - name: >-
-        Configure global Git settings in file: ~/.gitconfig
+        Configure global Git settings in file: ~{{ the_user }}/.gitconfig
       become: true
       become_user: "{{ the_user }}"
       ansible.builtin.command:
