@@ -1,31 +1,19 @@
 function mykeys {
-  TMP_VAULT_PASS_FILE=/tmp/.vault_pass
   WORKSTATION_VM_DIR=/home/student/workstation-vm
 
-  echo -n "Vault password: "
-  read -sr vault_pass
-  echo "${vault_pass}" > ${TMP_VAULT_PASS_FILE}
   if pushd ${WORKSTATION_VM_DIR} &> /dev/null
   then
-    echo
-    ansible-playbook sk.yml --tags ssh_keys,prep_collectionsk.yml --tags ssh_keys --vault-pass-file ${TMP_VAULT_PASS_FILE}
+    ansible-playbook sk.yml --tags ssh_keys,prep_collections --ask-vault-pass
     popd &> /dev/null
   fi
-  rm -f ${TMP_VAULT_PASS_FILE}
 }
 
 function gcl {
-  TMP_VAULT_PASS_FILE=/tmp/.vault_pass
   WORKSTATION_VM_DIR=/home/student/workstation-vm
 
-  echo -n "Vault password: "
-  read -sr vault_pass
-  echo "${vault_pass}" > ${TMP_VAULT_PASS_FILE}
   if pushd ${WORKSTATION_VM_DIR} &> /dev/null
   then
-    echo
-    ansible-playbook configure_git_local.yml --vault-pass-file ${TMP_VAULT_PASS_FILE}
+    ansible-playbook configure_git_local.yml --ask-vault-pass
     popd &> /dev/null
   fi
-  rm -f ${TMP_VAULT_PASS_FILE}
 }
